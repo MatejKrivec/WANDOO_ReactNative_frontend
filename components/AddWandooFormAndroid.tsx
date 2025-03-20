@@ -8,17 +8,9 @@ import * as ImagePicker from 'expo-image-picker';
 interface AddWandooFormProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (wandoo: {
-    title: string;
-    date: Date;
-    time: Date;
-    description: string;
-    image: string | null;
-    location: { latitude: number; longitude: number; address: string };
-  }) => void;
 }
 
-const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose, onSave }) => {
+const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState(new Date());
@@ -53,14 +45,7 @@ const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose,
       return;
     }
 
-    onSave({
-      title,
-      date,
-      time,
-      description,
-      image,
-      location,
-    });
+  
 
     onClose();
   };

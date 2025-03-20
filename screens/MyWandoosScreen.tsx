@@ -54,9 +54,7 @@ const MyWandoosScreen: React.FC = () => {
     }
   };
 
-  function handleSaveWandoo(wandoo: { title: string; date: Date; time: Date; description: string; image: string | null; }): void {
-    throw new Error('Function not implemented.');
-  }
+
 
   return (
     <View style={styles.container}>
@@ -80,9 +78,9 @@ const MyWandoosScreen: React.FC = () => {
 
       {/* Add Wandoo Modal */}
       {Platform.OS === 'web' ? (
-        <AddWandooFormWeb visible={modalVisible} onClose={() => setModalVisible(false)} onSave={handleSaveWandoo} />
+        <AddWandooFormWeb visible={modalVisible} onClose={() => setModalVisible(false)}  />
       ) : (
-        <AddWandooFormAndroid visible={modalVisible} onClose={() => setModalVisible(false)} onSave={handleSaveWandoo} />
+        <AddWandooFormAndroid visible={modalVisible} onClose={() => setModalVisible(false)}  />
       )}
     
     </View>

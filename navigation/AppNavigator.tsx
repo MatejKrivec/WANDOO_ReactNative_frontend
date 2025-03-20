@@ -4,27 +4,40 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem, DrawerContentComponentProps } from '@react-navigation/drawer';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
+import SignupScreen from '../screens/SignupScreen';
+import ConfirmSignupScreen from '../screens/ConfirmSignupScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import WandoosScreen from '../screens/WandoosScreen';
 import MyWandoosScreen from '../screens/MyWandoosScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ChatsScreen from '../screens/ChatsScreen';
 import ChatRoom from '../screens/ChatRoom';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define types for stack navigation
 export type RootStackParamList = {
   Home: undefined;
   Login: undefined;
-  Register: undefined;
+  Signup: undefined;
   Landing: undefined;
   ChatsScreen: undefined;
   ChatRoom: { title: string; image: any };
+  ConfirmSignup: { username: string, email: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Drawer = createDrawerNavigator();
+
+// Function to delete token based on platform
+const deleteToken = async () => {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.removeItem('authToken');
+  } else {
+    await SecureStore.deleteItemAsync('authToken');
+  }
+};
 
 // Custom Drawer content
 export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
@@ -58,7 +71,10 @@ export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
       <View style={{ borderTopWidth: 1, borderTopColor: '#ccc', paddingTop: 10 }}>
         <DrawerItem
           label="Logout"
-          onPress={() => {
+          onPress={async () => {
+            // Delete the token
+            await deleteToken();
+
             // Reset the navigation stack and navigate to Login screen
             props.navigation.reset({
               index: 0, // Ensure the login screen is the only screen in the stack
@@ -83,6 +99,7 @@ const DrawerNavigator = () => {
       <Drawer.Screen name="MyWandoos" component={MyWandoosScreen} />
       <Drawer.Screen name="Friends" component={FriendsScreen} />
       <Drawer.Screen name="Chats" component={ChatsScreen} />
+      <Stack.Screen name="ConfirmSignup" component={ConfirmSignupScreen} /> 
     </Drawer.Navigator>
   );
 };
@@ -103,9 +120,14 @@ const AppNavigator: React.FC = () => {
           options={{ headerShown: true }} // Show header for Login
         />
         <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
+          name="Signup" 
+          component={SignupScreen} 
           options={{ headerShown: true }} // Show header for Register
+        />
+         <Stack.Screen 
+          name="ConfirmSignup" 
+          component={ConfirmSignupScreen} 
+          options={{ headerShown: true }} // Show header for ConfirmSignup
         />
         <Stack.Screen 
           name="Landing" 

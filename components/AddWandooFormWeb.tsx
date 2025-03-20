@@ -3,18 +3,11 @@ import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, FlatList, I
 import * as ImagePicker from 'expo-image-picker';
 import debounce from 'lodash.debounce';
 import GooglePlacesInput from './GoogleMapWeb';
+import moment from 'moment-timezone';
 
 interface AddWandooFormProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (wandoo: {
-    title: string;
-    date: Date;
-    time: Date;
-    description: string;
-    image: string | null;
-    location: { latitude: number; longitude: number; address: string };
-  }) => void;
 }
 
 interface Prediction {
@@ -22,7 +15,7 @@ interface Prediction {
   place_id: string;
 }
 
-const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose, onSave }) => {
+const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -87,23 +80,69 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose, onSa
     }
   };
 
-  // ✅ Save Wandoo event
-  const handleSave = () => {
+  const uploadImageToS3 = async (imageUri: string) => {
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+  
+    const formData = new FormData();
+    formData.append('file', blob, 'photo.jpg');
+  
+    const uploadResponse = await fetch('http://localhost:3000/s3/upload', {
+      method: 'POST',
+      body: formData,
+    });
+  
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload image');
+    }
+  
+    const responseData = await uploadResponse.json();
+    return responseData.url;
+  };
+
+  const handleSave = async () => {
     if (!title || !date || !time || !location.address) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
-    onSave({
-      title,
-      date: new Date(date),
-      time: new Date(`1970-01-01T${time}:00`),
-      description,
-      image,
-      location,
-    });
-
-    onClose();
+  
+    try {
+      const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
+  
+      const eventDate = localTime.toISOString(); 
+  
+      let imageUrl = null;
+      if (image) {
+        imageUrl = await uploadImageToS3(image);
+      }
+  
+      const newWandoo = {
+        picture: imageUrl || '',
+        title,
+        description,
+        eventDate, 
+        profileId: '1', 
+        latitude: location.latitude,  
+        longitude: location.longitude, 
+      };
+  
+      const response = await fetch('http://localhost:3000/wandoos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWandoo),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create Wandoo');
+      }
+  
+      const createdWandoo = await response.json();
+      console.log('Wandoo created:', createdWandoo);
+  
+      onClose();
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (
@@ -123,8 +162,6 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose, onSa
           <TextInput style={styles.input} placeholder="Time (HH:MM)" value={time} onChangeText={setTime} />
           <TextInput style={styles.input} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-
-        {/* <GooglePlacesInput onLocationSelect={setLocation} />*/} 
           {/* Location Search */}
           <TextInput
             style={styles.input}
@@ -146,7 +183,6 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose, onSa
 
           {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}
 
-         
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={onClose}>
               <Text style={styles.buttonText}>Cancel</Text>
