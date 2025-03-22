@@ -12,9 +12,9 @@ type Props = {
 };
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState('Matej');
+  const [surname, setSurname] = useState('Krivec');
+  const [password, setPassword] = useState('Matej123!');
 
   const storeToken = async (token: string) => {
     if (Platform.OS === 'web') {

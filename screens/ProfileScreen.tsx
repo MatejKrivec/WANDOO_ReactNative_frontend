@@ -61,6 +61,10 @@ const ProfileScreen: React.FC = () => {
   // Upload the image to S3 and update the profile picture in backend
   const handleImageUpload = async (imageUri: string) => {
   try {
+
+    const token = await getToken();
+    if (!token) throw new Error('No auth token found');
+    
     const response = await fetch(imageUri);
     const blob = await response.blob();
     const formData = new FormData();
@@ -74,7 +78,7 @@ const ProfileScreen: React.FC = () => {
       method: 'POST',
       body: formData,  // Send the FormData as the body
       headers: {
-    // Send the token for authentication
+        'Authorization': `Bearer ${token}`,
       },
     });
   

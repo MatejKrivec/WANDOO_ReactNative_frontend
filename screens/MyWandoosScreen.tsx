@@ -1,75 +1,126 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, Image, StyleSheet, Modal, TextInput, TouchableOpacity, Platform 
+  View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform 
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddWandooFormAndroid from '../components/AddWandooFormAndroid';
 import AddWandooFormWeb from '../components/AddWandooFormWeb';
 
-
+interface Wandoo {
+  id: number;
+  title: string;
+  description: string;
+  postedAt: string;
+  eventDate: string;
+  profileId: string;
+  picture: string;
+  latitude: number;
+  longitude: number;
+}
 
 const MyWandoosScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState<string | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [wandoos, setWandoos] = useState<Wandoo[]>([]);
+  const [addresses, setAddresses] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(true);
 
+  const getToken = async () => {
+    return Platform.OS === 'web'
+      ? await AsyncStorage.getItem('authToken')
+      : await SecureStore.getItemAsync('authToken');
+  };
 
-  
+  const fetchWandoos = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const response = await fetch('http://localhost:3000/wandoos/my/wandoos', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  // Function to pick an image
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+      if (!response.ok) {
+        throw new Error('Failed to fetch Wandoos');
+      }
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const data = await response.json();
+      setWandoos(data);
+
+      // Fetch the address for each Wandoo's latitude and longitude
+      data.forEach(async (wandoo: Wandoo) => {
+        const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
+        setAddresses((prev) => ({
+          ...prev,
+          [wandoo.id]: address,
+        }));
+      });
+    } catch (error) {
+      console.error('Error fetching Wandoos', error);
+      alert('Failed to fetch Wandoos. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Function to handle date change
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
+  const fetchAddress = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`http://localhost:3000/geo/reverse-geocode?lat=${lat}&lng=${lng}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.address) {
+        return data.address;
+      }
+      return 'Address not found';
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      return 'Failed to fetch address';
     }
   };
 
-  // Function to handle time change
-  const onTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      setTime(selectedTime);
-    }
+  const formatDateTime = (eventDate: string) => {
+    const date = new Date(eventDate);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate}, time: ${formattedTime}`;
   };
 
+  useEffect(() => {
+    fetchWandoos();
+  }, []);
 
+  const renderWandooItem = ({ item }: { item: Wandoo }) => (
+    <View style={styles.wandooItem}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Image 
+        source={{ uri: item.picture }} 
+        style={styles.image} 
+      />
+      <Text style={styles.date}>{formatDateTime(item.eventDate)}</Text>
+      <Text style={styles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Wandoo Item */}
-      <View style={styles.wandooItem}>
-        <Text style={styles.title}>Hiking Adventure</Text>
-        <Image 
-          source={require('../assets/images/img-krnes_smrekovec_koroska.jpg')} 
-          style={styles.image} 
+      {loading ? (
+        <Text>Loading...</Text>
+      ) : (
+        <FlatList
+          data={wandoos}
+          renderItem={renderWandooItem}
+          keyExtractor={(item) => item.id.toString()}
+          style={styles.list}
         />
-        <Text style={styles.date}>Date: March 20, 2025</Text>
-        <Text style={styles.description}>
-          A scenic hiking adventure through the beautiful mountains of Slovenia.
-        </Text>
-      </View>
+      )}
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
@@ -78,11 +129,22 @@ const MyWandoosScreen: React.FC = () => {
 
       {/* Add Wandoo Modal */}
       {Platform.OS === 'web' ? (
-        <AddWandooFormWeb visible={modalVisible} onClose={() => setModalVisible(false)}  />
+        <AddWandooFormWeb 
+          visible={modalVisible} 
+          onClose={() => {
+            setModalVisible(false);
+            fetchWandoos(); // Refresh the list after closing the modal
+          }} 
+        />
       ) : (
-        <AddWandooFormAndroid visible={modalVisible} onClose={() => setModalVisible(false)}  />
+        <AddWandooFormAndroid 
+          visible={modalVisible} 
+          onClose={() => {
+            setModalVisible(false);
+            fetchWandoos(); // Refresh the list after closing the modal
+          }} 
+        />
       )}
-    
     </View>
   );
 };
@@ -93,6 +155,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  list: {
+    width: '100%',
   },
   wandooItem: {
     width: '100%',
@@ -120,6 +185,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 5,
   },
+  location: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
   description: {
     fontSize: 14,
     textAlign: 'center',
@@ -143,91 +213,6 @@ const styles = StyleSheet.create({
   plusSign: {
     fontSize: 40,
     color: 'white',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
-  imagePicker: {
-    backgroundColor: 'lightblue',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  imagePickerText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  imagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 10,
-  },
-  dateTimePicker: {
-    padding: 10,
-    borderWidth: 1,
-    borderRadius: 5,
-    borderColor: '#ccc',
-    marginBottom: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  dateTimeText: {
-    fontSize: 16,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  cancelButton: {
-    backgroundColor: 'red',
-  },
-  saveButton: {
-    backgroundColor: 'green',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
   },
 });
 

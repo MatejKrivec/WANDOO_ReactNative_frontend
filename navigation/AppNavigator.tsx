@@ -11,7 +11,7 @@ import WandoosScreen from '../screens/WandoosScreen';
 import MyWandoosScreen from '../screens/MyWandoosScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import ChatsScreen from '../screens/ChatsScreen';
-import ChatRoom from '../screens/ChatRoom';
+import ChatRoom from '../components/ChatRoom';
 import { View, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,7 +23,7 @@ export type RootStackParamList = {
   Signup: undefined;
   Landing: undefined;
   ChatsScreen: undefined;
-  ChatRoom: { title: string; image: any };
+  ChatRoom: { title: string; image: any, id: any };
   ConfirmSignup: { username: string, email: string };
 };
 

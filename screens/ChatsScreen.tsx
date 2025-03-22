@@ -1,7 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For web
+import * as SecureStore from 'expo-secure-store'; // For mobile
+import { StackNavigationProp } from '@react-navigation/stack'; // For navigation
 
 type ChatsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ChatsScreen'>;
 
@@ -9,103 +12,210 @@ type Props = {
   navigation: ChatsScreenNavigationProp;
 };
 
-const chats = [
-  {
-    id: '1',
-    title: 'Hiking Adventure',
-    lastMessage: 'Hey, are we still going on the hike tomorrow?',
-    date: 'March 19, 2025',
-    image: require('../assets/images/img-krnes_smrekovec_koroska.jpg'), // Example image
-  },
-  {
-    id: '2',
-    title: 'Beach Party',
-    lastMessage: 'Looking forward to the party on the weekend!',
-    date: 'March 18, 2025',
-    image: require('../assets/images/img-krnes_smrekovec_koroska.jpg'), // Example image
-  },
-  {
-    id: '3',
-    title: 'Mountain Climbing',
-    lastMessage: 'We need to pack our gear for the climb.',
-    date: 'March 17, 2025',
-    image: require('../assets/images/img-krnes_smrekovec_koroska.jpg'), // Example image
-  },
-];
-
 const ChatsScreen: React.FC<Props> = ({ navigation }) => {
-  const renderChat = ({ item }: { item: typeof chats[0] }) => (
+  // State to store chat rooms data
+  const [chatRooms, setChatRooms] = useState<any[]>([]); // Change 'any' type based on your response type
+  const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState<any[]>([]); // Dynamic messages based on chatroom
+
+  const getToken = async () => {
+    return Platform.OS === 'web'
+      ? await AsyncStorage.getItem('authToken')
+      : await SecureStore.getItemAsync('authToken');
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchChatRooms = async () => {
+        try {
+          const token = await getToken();
+          const response = await fetch('http://localhost:3000/chatrooms/my', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+  
+          if (!response.ok) {
+            throw new Error('Failed to fetch chat rooms');
+          }
+  
+          const data = await response.json();
+          setChatRooms(data);
+        } catch (error) {
+          console.error('Error fetching chat rooms:', error);
+        }
+      };
+  
+      fetchChatRooms();
+    }, [])
+  );
+
+
+  const renderChatRoom = ({ item }: { item: typeof chatRooms[0] }) => (
     <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => {
-        navigation.navigate('ChatRoom', { title: item.title, image: item.image });
-      }}
+      style={styles.chatRoomItem}
+      onPress={() => navigation.navigate('ChatRoom', { title: item.title, image: item.picture, id: item.id })} // Navigate to the chat room
     >
-      <Image source={item.image} style={styles.chatImage} />
-      <View style={styles.chatDetails}>
-        <Text style={styles.chatTitle}>{item.title}</Text>
-        <Text style={styles.chatMessage}>{item.lastMessage}</Text>
-        <Text style={styles.chatDate}>{item.date}</Text>
+      <Image source={{ uri: item.picture }} style={styles.chatRoomImage} />
+      <View style={styles.chatRoomDetails}>
+        <Text style={styles.chatRoomTitle}>{item.title}</Text>
+        <Text style={styles.chatRoomEventDate}>
+          {new Date(item.eventDate).toLocaleString()}
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <>
+    
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Chat Rooms</Text>
+      </View>
+
+      {/* Chat Rooms List */}
       <FlatList
-        data={chats}
-        renderItem={renderChat}
-        keyExtractor={(item) => item.id}
-        style={styles.chatList}
+        data={chatRooms}
+        renderItem={renderChatRoom}
+        keyExtractor={(item) => item.id.toString()}
+        style={styles.chatRoomsList}
+        showsVerticalScrollIndicator={false}
       />
-    </View>
+
+    
+
+</>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2', // Light background color
+    backgroundColor: '#f2f2f2',
   },
-  chatList: {
-    paddingTop: 10,
-  },
-  chatItem: {
+  header: {
     flexDirection: 'row',
     padding: 15,
+    alignItems: 'center',
     backgroundColor: '#fff',
-    marginBottom: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5, // For Android shadow
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
-  chatImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30, // Circular image
+  headerImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 15,
   },
-  chatDetails: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  chatTitle: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
   },
-  chatMessage: {
+  chatRoomsList: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  chatRoomItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    paddingBottom: 10,
+  },
+  chatRoomImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
+  },
+  chatRoomDetails: {
+    flex: 1,
+  },
+  chatRoomTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  chatRoomEventDate: {
     fontSize: 14,
-    color: '#666',
+    color: '#888',
+  },
+  messagesList: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  messageContainer: {
+    marginBottom: 10,
+    maxWidth: '80%',
+  },
+  messageSender: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#007bff',
+    borderRadius: 15,
+    padding: 10,
+    marginRight: 15,
+  },
+  messageReceiver: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#ccc',
+    borderRadius: 15,
+    padding: 10,
+    marginLeft: 15,
+  },
+  messageText: {
+    fontSize: 14,
+    color: '#fff',
+  },
+  senderText: {
+    color: '#fff',
+  },
+  receiverText: {
+    color: '#333',
+  },
+  messageTimestamp: {
+    fontSize: 10,
+    color: '#fff',
     marginTop: 5,
   },
-  chatDate: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 5,
+  senderTimestamp: {
+    color: '#fff',
+  },
+  receiverTimestamp: {
+    color: '#555',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    backgroundColor: '#fff',
+  },
+  textInput: {
+    flex: 1,
+    height: 40,
+    paddingHorizontal: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  sendButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 

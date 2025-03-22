@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import debounce from 'lodash.debounce';
 import GooglePlacesInput from './GoogleMapWeb';
 import moment from 'moment-timezone';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AddWandooFormProps {
   visible: boolean;
@@ -30,13 +31,21 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
+
+  const getToken = async () => {
+    return await AsyncStorage.getItem('authToken');
+  };
+
   // ✅ Debounced function to fetch location coordinates
   const fetchLocationCoordinates = useCallback(
     debounce(async (text: string) => {
       if (!text) return setPredictions([]);
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/geo/coordinates?address=${encodeURIComponent(text)}`);
+        const token = await getToken();
+        const response = await fetch(`http://localhost:3000/geo/coordinates?address=${encodeURIComponent(text)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
         
         if (data.latitude && data.longitude) {
@@ -87,8 +96,11 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     const formData = new FormData();
     formData.append('file', blob, 'photo.jpg');
   
+    const token = await getToken();
+
     const uploadResponse = await fetch('http://localhost:3000/s3/upload', {
       method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
   
@@ -107,6 +119,8 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     }
   
     try {
+      const token = await getToken();
+
       const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
   
       const eventDate = localTime.toISOString(); 
@@ -121,14 +135,16 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
         title,
         description,
         eventDate, 
-        profileId: '1', 
         latitude: location.latitude,  
         longitude: location.longitude, 
       };
   
       const response = await fetch('http://localhost:3000/wandoos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(newWandoo),
       });
   
