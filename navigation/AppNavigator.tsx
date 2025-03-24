@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, RouteProp } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem, DrawerContentComponentProps } from '@react-navigation/drawer';
 import HomeScreen from '../screens/HomeScreen';
@@ -21,7 +21,8 @@ export type RootStackParamList = {
   Home: undefined;
   Login: undefined;
   Signup: undefined;
-  Landing: undefined;
+  Landing: { latitude: number | null; longitude: number | null };  // Pass location
+  Wandoos: { latitude: number | null; longitude: number | null };
   ChatsScreen: undefined;
   ChatRoom: { title: string; image: any, id: any };
   ConfirmSignup: { username: string, email: string };
@@ -87,19 +88,26 @@ export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   );
 };
 
-// Drawer Navigator
-const DrawerNavigator = () => {
+const DrawerNavigator = ({ route }: { route: RouteProp<RootStackParamList, 'Landing'> }) => {
+  const { latitude, longitude } = route.params;
+  const WandoosWrapper = (props: any) => {
+    return <WandoosScreen {...props} />;
+  };
+  
   return (
     <Drawer.Navigator 
-      initialRouteName="Wandoos" // Set "Wandoos" as the default selected screen
+      initialRouteName="Wandoos"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Wandoos" component={WandoosScreen} />
+      <Drawer.Screen 
+        name="Wandoos" 
+        component={WandoosWrapper} 
+        initialParams={{ latitude, longitude }}  
+      />
       <Drawer.Screen name="Profile" component={ProfileScreen} />
       <Drawer.Screen name="MyWandoos" component={MyWandoosScreen} />
       <Drawer.Screen name="Friends" component={FriendsScreen} />
       <Drawer.Screen name="Chats" component={ChatsScreen} />
-      <Stack.Screen name="ConfirmSignup" component={ConfirmSignupScreen} /> 
     </Drawer.Navigator>
   );
 };

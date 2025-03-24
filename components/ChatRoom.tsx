@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,8 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const flatListRef = useRef<FlatList>(null);
+
+  const { height } = Dimensions.get('window'); // Get screen height
 
   const getToken = async () => {
     return Platform.OS === 'web'
@@ -78,7 +80,9 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
         fetchMessages();
 
         // Scroll to the bottom when a new message is added
-        flatListRef.current?.scrollToEnd({ animated: true });
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
       } catch (error) {
         console.error('Error sending message:', error);
       }
@@ -103,13 +107,13 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { height: height * 0.1 }]}>
         <Image source={image} style={styles.headerImage} />
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
 
       {/* Scrollable Messages */}
-      <View style={styles.messagesContainer}>
+      <View style={[styles.messagesContainer, { height: height * 0.73 }]}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -117,11 +121,12 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
           keyExtractor={(item) => item.id}
           style={styles.messagesList}
           contentContainerStyle={styles.messagesContent}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
       </View>
 
       {/* Message Input Section */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { height: height * 0.1 }]}>
         <TextInput
           value={newMessage}
           onChangeText={setNewMessage}
@@ -161,7 +166,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   messagesContainer: {
-    flex: 1,
+    overflow: 'hidden', // Prevent overflow
   },
   messagesList: {
     flex: 1,

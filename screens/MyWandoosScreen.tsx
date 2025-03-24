@@ -113,6 +113,10 @@ const MyWandoosScreen: React.FC = () => {
     <View style={styles.container}>
       {loading ? (
         <Text>Loading...</Text>
+      ) : wandoos.length === 0 ? (
+        <View style={styles.noWandoosContainer}>
+          <Text style={styles.noWandoosText}>No Wandoos yet, so what you wannadoo?</Text>
+        </View>
       ) : (
         <FlatList
           data={wandoos}
@@ -158,6 +162,7 @@ const styles = StyleSheet.create({
   },
   list: {
     width: '100%',
+    paddingBottom: 100, // Add padding to the bottom to account for the add button
   },
   wandooItem: {
     width: '100%',
@@ -213,6 +218,17 @@ const styles = StyleSheet.create({
   plusSign: {
     fontSize: 40,
     color: 'white',
+  },
+  noWandoosContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  noWandoosText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'gray',
+    textAlign: 'center',
   },
 });
 

@@ -19,6 +19,7 @@
     "@rnmapbox/maps": "^10.1.37",
     "expo": "~52.0.38",
     "expo-image-picker": "~16.0.6",
+    "expo-location": "~18.0.8",
     "expo-secure-store": "~14.0.1",
     "expo-status-bar": "~2.0.1",
     "leaflet": "^1.9.4",
