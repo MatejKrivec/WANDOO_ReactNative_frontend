@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Dimensions, Alert } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { sendMessage, fetchMessages } from '../services/chatroom.service';
 
 type ChatRoomRouteProp = RouteProp<RootStackParamList, 'ChatRoom'>;
 
@@ -25,66 +26,38 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
       : await SecureStore.getItemAsync('authToken');
   };
 
-  const fetchMessages = async () => {
+  const loadMessages = async () => {
     try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/chatrooms/${id}/messages`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch messages');
-      }
-
-      const data = await response.json();
-      setMessages(data);
+      const loadedMessages = await fetchMessages(id);
+      setMessages(loadedMessages);
 
       // Scroll to the bottom after messages are fetched
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('Error loading messages:', error);
     }
   };
 
   useEffect(() => {
-    fetchMessages();
+    loadMessages();
   }, [id]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       try {
-        const token = await getToken();
-        const messageData = {
-          content: newMessage,
-        };
-
-        const response = await fetch(`http://localhost:3000/chatrooms/${id}/messages`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(messageData),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to send message');
+        const data = await sendMessage(id, newMessage);
+        if (data) {
+          setNewMessage(''); // Clear input field after sending
+          loadMessages(); // Reload messages after sending a new one
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
         }
-
-        fetchMessages();
-
-        // Scroll to the bottom when a new message is added
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
       } catch (error) {
         console.error('Error sending message:', error);
+        Alert.alert('Error', 'Failed to send message. Please try again later.');
       }
     }
   };

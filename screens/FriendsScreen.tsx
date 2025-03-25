@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchCurrentUserProfile, fetchAllProfiles } from '../services/profile.service';
+import { fetchFriendships, sendFriendRequest, acceptFriendRequest, removeFriend } from '../services/friends.service';
+import { getToken } from '../services/token.service';
 
 interface Friend {
   id: string;
@@ -20,50 +23,16 @@ const FriendsScreen: React.FC = () => {
 
   const defaultProfilePic = require('../assets/images/surfer.jpg');
 
-  const getToken = async () => {
-    return Platform.OS === 'web'
-      ? await AsyncStorage.getItem('authToken')
-      : await SecureStore.getItemAsync('authToken');
-  };
-
   const fetchProfiles = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const meResponse = await fetch('http://localhost:3000/profiles/me', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (!meResponse.ok) {
-        throw new Error('Failed to fetch current user profile');
-      }
-  
-      const meData = await meResponse.json();
+      const meData = await fetchCurrentUserProfile();
       const currentUserCognitoId = meData.cognitoId;
+      const profiles = await fetchAllProfiles();
   
-      const profilesResponse = await fetch('http://localhost:3000/profiles', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const profiles = await profilesResponse.json();
-      console.log("Profiles:", profiles);
-  
-      const friendshipResponse = await fetch('http://localhost:3000/friends/list', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const friendshipData = await friendshipResponse.json();
-      console.log("Friendships:", friendshipData);
+      const friendshipData = await fetchFriendships();
   
       const sortedProfiles = profiles.map((profile: any) => {
-        console.log("Current user cognito id: " + currentUserCognitoId);
         if (profile.cognitoId === currentUserCognitoId) return null;
   
         const friendship = friendshipData.find((f: any) =>
@@ -77,7 +46,6 @@ const FriendsScreen: React.FC = () => {
           if (friendship.status === 'ACCEPTED') {
             status = 'friend';
           } else if (friendship.status === 'PENDING') {
-            // Check if the current user is the recipient of the friend request
             status = friendship.userId2 === currentUserCognitoId ? 'accept' : 'pending';
           }
         }
@@ -89,8 +57,6 @@ const FriendsScreen: React.FC = () => {
           status,
         };
       }).filter((profile: any) => profile !== null);
-  
-      console.log("Sorted Profiles:", sortedProfiles);
   
       setFriends(sortedProfiles.filter((profile: { status: string; }) => profile.status === 'friend'));
       setPending(sortedProfiles.filter((profile: { status: string; }) => profile.status === 'pending' || profile.status === 'accept'));
@@ -110,64 +76,28 @@ const FriendsScreen: React.FC = () => {
 
   const handleSendFriendRequest = async (userId: string) => {
     try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/friends/request/${userId}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        console.log('Friend request sent');
-        fetchProfiles(); // Re-fetch profiles to update the state
-      } else {
-        console.error('Error sending friend request');
-      }
+      await sendFriendRequest(userId);
+      fetchProfiles(); // Re-fetch profiles to update the state
     } catch (error) {
-      console.error('Error sending friend request', error);
+      console.error('Error sending friend request:', error);
     }
   };
 
   const handleAcceptFriendRequest = async (userId: string) => {
     try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/friends/accept/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        console.log('Friend request accepted');
-        fetchProfiles(); // Re-fetch profiles to update the state
-      } else {
-        console.error('Error accepting friend request');
-      }
+      await acceptFriendRequest(userId);
+      fetchProfiles(); // Re-fetch profiles to update the state
     } catch (error) {
-      console.error('Error accepting friend request', error);
+      console.error('Error accepting friend request:', error);
     }
   };
 
   const handleRemoveFriend = async (userId: string) => {
     try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/friends/remove/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        console.log('Friend removed');
-        fetchProfiles(); // Re-fetch profiles to update the state
-      } else {
-        console.error('Error removing friend');
-      }
+      await removeFriend(userId);
+      fetchProfiles(); // Re-fetch profiles to update the state
     } catch (error) {
-      console.error('Error removing friend', error);
+      console.error('Error removing friend:', error);
     }
   };
 

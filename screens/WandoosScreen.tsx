@@ -1,8 +1,9 @@
+// screens/WandoosScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchFriendsWandoos, fetchJoinedWandoos, fetchAddress, joinWandoo } from '../services/wandoo.service';
 
 // Define route props type
 type WandoosScreenRouteProp = RouteProp<RootStackParamList, 'Wandoos'>;
@@ -17,83 +18,33 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
   const [addresses, setAddresses] = useState<{ [key: string]: string }>({});
   const [joinedWandoos, setJoinedWandoos] = useState<number[]>([]);
 
-  // Retrieve auth token
-  const getToken = async () => await AsyncStorage.getItem('authToken');
-
   // Fetch Wandoos
-  const fetchFriendsWandoos = async () => {
+  const fetchWandoosData = async () => {
     try {
-      const token = await getToken();
-      if (!token) return console.error('No auth token found');
-
-      const response = await fetch('http://localhost:3000/wandoos/friends/wandoos', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await response.json();
-      setWandoos(data);
+      const wandoosData = await fetchFriendsWandoos();
+      setWandoos(wandoosData);
 
       // Fetch addresses
-      data.forEach(async (wandoo: any) => {
+      wandoosData.forEach(async (wandoo: any) => {
         const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
         setAddresses((prev) => ({ ...prev, [wandoo.id]: address }));
       });
 
       // Sort Wandoos by distance
-      sortWandoosByDistance(data);
+      sortWandoosByDistance(wandoosData);
     } catch (error) {
       console.error('Error fetching Wandoos:', error);
     }
   };
 
   // Fetch joined Wandoos
-  const fetchJoinedWandoos = async () => {
+  const fetchJoinedData = async () => {
     try {
-      const token = await getToken();
-      if (!token) return console.error('No auth token found');
-
-      const response = await fetch('http://localhost:3000/chatrooms/joined', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await response.json();
-      setJoinedWandoos(data);
+      const joined = await fetchJoinedWandoos();
+      setJoinedWandoos(joined);
     } catch (error) {
       console.error('Error fetching joined Wandoos:', error);
     }
-  };
-
-  // Fetch address from coordinates
-  const fetchAddress = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/geo/reverse-geocode?lat=${lat}&lng=${lng}`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await response.json();
-      return data.address || 'Address not found';
-    } catch (error) {
-      console.error('Error fetching address:', error);
-      return 'Failed to fetch address';
-    }
-  };
-
-  // Calculate distance between two points (in km)
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const toRad = (value: number) => (value * Math.PI) / 180;
-    const R = 6371; // Earth radius in km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
   };
 
   // Sort Wandoos by distance from user
@@ -112,24 +63,25 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     setWandoos(sortedWandoos);
   };
 
+  // Calculate distance between two points (in km)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const onJoinWandoo = async (wandooId: number) => {
     try {
-      const token = await getToken();
-      if (!token) return console.error('No auth token found');
-
-      const response = await fetch('http://localhost:3000/chatrooms/join', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ wandooId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to join Wandoo');
-
+      await joinWandoo(wandooId);
       console.log('Successfully joined Wandoo');
-      fetchJoinedWandoos();
+      fetchJoinedData();
     } catch (error) {
       console.error('Error joining Wandoo:', error);
     }
@@ -138,9 +90,9 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
   // Fetch data when the screen is focused
   useFocusEffect(
     useCallback(() => {
-      console.log("The wandoo longditude and laditude: " + latitude + longitude)
-      fetchFriendsWandoos();
-      fetchJoinedWandoos();
+      console.log("The wandoo longitude and latitude: " + latitude + ", " + longitude);
+      fetchWandoosData();
+      fetchJoinedData();
     }, [])
   );
 

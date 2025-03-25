@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { confirmSignup } from '../services/auth.service';
 
 type ConfirmSignupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ConfirmSignup'>;
 type ConfirmSignupScreenRouteProp = RouteProp<RootStackParamList, 'ConfirmSignup'>;
@@ -19,23 +20,11 @@ const ConfirmSignupScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleConfirm = async () => {
     try {
-      const response = await fetch('http://localhost:3000/auth/confirm-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, code }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Success', 'Your account is now verified. Please login.');
-        navigation.navigate('Login'); 
-      } else {
-        Alert.alert('Error', data.message || 'Failed to confirm signup');
-      }
-    } catch (error) {
-      console.error('Confirmation Error:', error);
-      Alert.alert('Error', 'Something went wrong');
+      await confirmSignup(username, code);
+      Alert.alert('Success', 'Your account is now verified. Please login.');
+      navigation.navigate('Login');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to confirm signup');
     }
   };
 

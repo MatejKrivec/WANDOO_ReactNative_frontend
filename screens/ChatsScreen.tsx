@@ -5,6 +5,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For web
 import * as SecureStore from 'expo-secure-store'; // For mobile
 import { StackNavigationProp } from '@react-navigation/stack'; // For navigation
+import { fetchChatRooms } from '../services/chatroom.service';
 
 type ChatsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ChatsScreen'>;
 
@@ -15,40 +16,19 @@ type Props = {
 const ChatsScreen: React.FC<Props> = ({ navigation }) => {
   // State to store chat rooms data
   const [chatRooms, setChatRooms] = useState<any[]>([]); // Change 'any' type based on your response type
-  const [newMessage, setNewMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([]); // Dynamic messages based on chatroom
-
-  const getToken = async () => {
-    return Platform.OS === 'web'
-      ? await AsyncStorage.getItem('authToken')
-      : await SecureStore.getItemAsync('authToken');
+ 
+  const loadChatRooms = async () => {
+    try {
+      const rooms = await fetchChatRooms();
+      setChatRooms(rooms);
+    } catch (error) {
+      console.error('Error loading chat rooms:', error);
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      const fetchChatRooms = async () => {
-        try {
-          const token = await getToken();
-          const response = await fetch('http://localhost:3000/chatrooms/my', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-  
-          if (!response.ok) {
-            throw new Error('Failed to fetch chat rooms');
-          }
-  
-          const data = await response.json();
-          setChatRooms(data);
-        } catch (error) {
-          console.error('Error fetching chat rooms:', error);
-        }
-      };
-  
-      fetchChatRooms();
+      loadChatRooms();
     }, [])
   );
 
@@ -84,10 +64,7 @@ const ChatsScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.chatRoomsList}
         showsVerticalScrollIndicator={false}
       />
-
-    
-
-</>
+    </>
   );
 };
 

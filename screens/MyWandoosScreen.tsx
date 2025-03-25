@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Platform 
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddWandooFormAndroid from '../components/AddWandooFormAndroid';
 import AddWandooFormWeb from '../components/AddWandooFormWeb';
+import { fetchMyWandoos, fetchAddress } from '../services/wandoo.service'; // Import from wandoo.service
 
 interface Wandoo {
   id: number;
@@ -25,32 +24,26 @@ const MyWandoosScreen: React.FC = () => {
   const [addresses, setAddresses] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
 
-  const getToken = async () => {
-    return Platform.OS === 'web'
-      ? await AsyncStorage.getItem('authToken')
-      : await SecureStore.getItemAsync('authToken');
+  const formatDateTime = (eventDate: string) => {
+    const date = new Date(eventDate);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate}, time: ${formattedTime}`;
   };
 
+  useEffect(() => {
+    fetchWandoos();
+  }, []);
+
+  // Fetch Wandoos and addresses
   const fetchWandoos = async () => {
     setLoading(true);
     try {
-      const token = await getToken();
-      const response = await fetch('http://localhost:3000/wandoos/my/wandoos', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch Wandoos');
-      }
-
-      const data = await response.json();
-      setWandoos(data);
+      const wandoosData = await fetchMyWandoos(); // Get the Wandoos data
+      setWandoos(wandoosData);
 
       // Fetch the address for each Wandoo's latitude and longitude
-      data.forEach(async (wandoo: Wandoo) => {
+      wandoosData.forEach(async (wandoo: Wandoo) => {
         const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
         setAddresses((prev) => ({
           ...prev,
@@ -64,37 +57,6 @@ const MyWandoosScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const fetchAddress = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`http://localhost:3000/geo/reverse-geocode?lat=${lat}&lng=${lng}`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      if (data.address) {
-        return data.address;
-      }
-      return 'Address not found';
-    } catch (error) {
-      console.error('Error fetching address:', error);
-      return 'Failed to fetch address';
-    }
-  };
-
-  const formatDateTime = (eventDate: string) => {
-    const date = new Date(eventDate);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${formattedDate}, time: ${formattedTime}`;
-  };
-
-  useEffect(() => {
-    fetchWandoos();
-  }, []);
 
   const renderWandooItem = ({ item }: { item: Wandoo }) => (
     <View style={styles.wandooItem}>

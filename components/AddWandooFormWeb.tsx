@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, FlatList, Image, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import debounce from 'lodash.debounce';
-import GooglePlacesInput from './GoogleMapWeb';
+import { fetchLocationCoordinates, fetchAddress, uploadImageToS3, saveWandoo } from '../services/wandoo.service';
 import moment from 'moment-timezone';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 interface AddWandooFormProps {
   visible: boolean;
@@ -31,35 +32,25 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-
   const getToken = async () => {
     return await AsyncStorage.getItem('authToken');
   };
 
   // ✅ Debounced function to fetch location coordinates
-  const fetchLocationCoordinates = useCallback(
+  const fetchLocation = useCallback(
     debounce(async (text: string) => {
       if (!text) return setPredictions([]);
       setLoading(true);
       try {
-        const token = await getToken();
-        const response = await fetch(`http://localhost:3000/geo/coordinates?address=${encodeURIComponent(text)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        
-        if (data.latitude && data.longitude) {
-          setLocation({
-            latitude: data.latitude,
-            longitude: data.longitude,
-            address: text, // Set address based on input text
-          });
+        const locationData = await fetchLocationCoordinates(text);
+        if (locationData) {
+          setLocation(locationData);
           setPredictions([{ description: text, place_id: '' }]); // Clear predictions after selection
         } else {
           setPredictions([]);
         }
       } catch (error) {
-        console.error('Error fetching location coordinates:', error);
+        console.error('Error fetching location:', error);
       } finally {
         setLoading(false);
       }
@@ -69,7 +60,7 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
 
   useEffect(() => {
     if (input) {
-      fetchLocationCoordinates(input);
+      fetchLocation(input);
     } else {
       setPredictions([]);
     }
@@ -89,72 +80,35 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     }
   };
 
-  const uploadImageToS3 = async (imageUri: string) => {
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-  
-    const formData = new FormData();
-    formData.append('file', blob, 'photo.jpg');
-  
-    const token = await getToken();
-
-    const uploadResponse = await fetch('http://localhost:3000/s3/upload', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-  
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload image');
-    }
-  
-    const responseData = await uploadResponse.json();
-    return responseData.url;
-  };
-
   const handleSave = async () => {
     if (!title || !date || !time || !location.address) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-  
+
     try {
       const token = await getToken();
 
       const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
-  
-      const eventDate = localTime.toISOString(); 
-  
+      const eventDate = localTime.toISOString();
+
       let imageUrl = null;
       if (image) {
         imageUrl = await uploadImageToS3(image);
       }
-  
+
       const newWandoo = {
         picture: imageUrl || '',
         title,
         description,
-        eventDate, 
-        latitude: location.latitude,  
-        longitude: location.longitude, 
+        eventDate,
+        latitude: location.latitude,
+        longitude: location.longitude,
       };
-  
-      const response = await fetch('http://localhost:3000/wandoos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newWandoo),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to create Wandoo');
-      }
-  
-      const createdWandoo = await response.json();
+
+      const createdWandoo = await saveWandoo(newWandoo);
       console.log('Wandoo created:', createdWandoo);
-  
+
       onClose();
     } catch (error: any) {
       Alert.alert('Error', error.message);

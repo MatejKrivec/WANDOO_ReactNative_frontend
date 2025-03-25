@@ -5,6 +5,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location'; // Import Location API
+import { signIn } from '../services/auth.service';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -62,38 +63,26 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Error', 'All fields are required!');
       return;
     }
-
+  
     // Ensure location is granted and fetched before proceeding
     if (!locationGranted) {
       Alert.alert('Error', 'Location permission is required to proceed!');
       return;
     }
-
+  
     const username = `${name.trim()}_${surname.trim()}`;
-
+  
     try {
-      const response = await fetch('http://localhost:3000/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('Login successful:', data);
-        await storeToken(data.AuthenticationResult.AccessToken);
-
-        // Wait a moment to ensure location is set before navigating
-        setTimeout(() => {
-          navigation.replace('Landing', { latitude, longitude });
-        }, 500);
-      } else {
-        Alert.alert('Error', data.message || 'Failed to login');
-      }
-    } catch (error) {
-      console.error('Login Error:', error);
-      Alert.alert('Error', 'Something went wrong');
+      const data = await signIn(username, password); // Call the imported function
+  
+      console.log('Login successful:', data);
+  
+      // Wait a moment to ensure location is set before navigating
+      setTimeout(() => {
+        navigation.replace('Landing', { latitude, longitude });
+      }, 500);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Something went wrong');
     }
   };
 

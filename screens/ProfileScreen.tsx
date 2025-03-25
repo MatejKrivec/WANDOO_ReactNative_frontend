@@ -3,45 +3,26 @@ import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, Platform, Touc
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import { fetchCurrentUserProfile, uploadProfilePicture, updateProfilePicture } from '../services/profile.service';
 
 const ProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [newProfilePic, setNewProfilePic] = useState<string | null>(null);  // New state to store temporary profile pic
-
-  const getToken = async () => {
-    return Platform.OS === 'web'
-      ? await AsyncStorage.getItem('authToken')
-      : await SecureStore.getItemAsync('authToken');
-  };
+  const [newProfilePic, setNewProfilePic] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const token = await getToken();
-        if (!token) throw new Error('No auth token found');
-
-        const response = await fetch('http://localhost:3000/profiles/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch profile');
-
-        setProfile(data);
+        const userProfile = await fetchCurrentUserProfile();
+        setProfile(userProfile);
       } catch (error: any) {
-        console.error('Profile Fetch Error:', error);
         Alert.alert('Error', error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    loadProfile();
   }, []);
 
   // Open image picker to select a new image
@@ -54,82 +35,30 @@ const ProfileScreen: React.FC = () => {
     });
 
     if (!result.canceled) {
-      setNewProfilePic(result.assets[0].uri);  // Temporarily set the selected image to state
+      setNewProfilePic(result.assets[0].uri);
     }
   };
 
-  // Upload the image to S3 and update the profile picture in backend
-  const handleImageUpload = async (imageUri: string) => {
-  try {
-
-    const token = await getToken();
-    if (!token) throw new Error('No auth token found');
-    
-    const response = await fetch(imageUri);
-    const blob = await response.blob();
-    const formData = new FormData();
-    formData.append('file', blob, 'profile-pic.jpg');  // Add the file correctly to FormData
-    
-    // Include the old image URL in FormData (this is the key expected in the backend)
-    const oldImageUrl = profile?.picture || '';  // Default to empty string if there's no current picture
-    formData.append('oldImageUrl', oldImageUrl);  // Add old image URL to FormData
-    
-    const uploadResponse = await fetch('http://localhost:3000/s3/change-profile-pic', {
-      method: 'POST',
-      body: formData,  // Send the FormData as the body
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-  
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload image');
-    }
-  
-    const responseData = await uploadResponse.json();
-    const uploadedImageUrl = responseData.url;
-  
-    await updateProfilePic(uploadedImageUrl);  // Update profile pic in the backend
-  } catch (error: any) {
-    Alert.alert('Error', error.message);
-  }
-};
-
-  // Update the profile picture URL in the backend
-  const updateProfilePic = async (newImageUrl: string) => {
+  // Upload and update profile picture
+  const handleImageUpload = async () => {
+    if (!newProfilePic) return;
     try {
-      const token = await getToken();
-      const response = await fetch('http://localhost:3000/profiles/me/picture', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          picture: newImageUrl,  // Sending the new image URL to update the profile picture
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile picture');
-      }
-
-      const updatedProfile = await response.json();
-      setProfile(updatedProfile);  // Update profile data with the new picture URL
-      setNewProfilePic(null);  // Reset the temporary profile picture URI
+      const uploadedImageUrl = await uploadProfilePicture(newProfilePic, profile?.picture);
+      const updatedProfile = await updateProfilePicture(uploadedImageUrl);
+      setProfile(updatedProfile);
+      setNewProfilePic(null);
     } catch (error: any) {
       Alert.alert('Error', error.message);
     }
   };
 
-  // If loading, show a loading indicator
   if (loading) return <ActivityIndicator size="large" color="#0000ff" style={{ flex: 1 }} />;
 
   return (
     <View style={styles.container}>
       <View style={styles.profileImageContainer}>
         <Image
-          source={{ uri: newProfilePic || profile?.picture }} // Use newProfilePic if available, else fallback to profile.picture
+          source={{ uri: newProfilePic || profile?.picture }}
           style={styles.profileImage}
         />
       </View>
@@ -140,14 +69,12 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.detail}>Email: {profile?.email || 'N/A'}</Text>
       </View>
 
-      {/* Button to select a new profile picture */}
       <TouchableOpacity style={styles.changePicButton} onPress={pickImage}>
         <Text style={styles.changePicText}>Change Profile Picture</Text>
       </TouchableOpacity>
 
-      {/* Button to confirm the new profile picture and upload it */}
       {newProfilePic && (
-        <TouchableOpacity style={styles.saveButton} onPress={() => handleImageUpload(newProfilePic)}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleImageUpload}>
           <Text style={styles.saveButtonText}>Save New Profile Picture</Text>
         </TouchableOpacity>
       )}

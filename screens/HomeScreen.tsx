@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'column',
     justifyContent: 'space-between',
-    height: 100, // Adjust height as needed
+    height: 100,
   },
   button: {
     marginVertical: 10,

@@ -4,6 +4,8 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { signUp } from '../services/auth.service';
+import { createProfile } from '../services/profile.service';
 
 type SignupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Signup'>;
 
@@ -31,60 +33,24 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
   
-    // Make sure the username is valid for Cognito
-    const username = `${name.trim()}_${surname.trim()}`;
-    const usernamePattern = /^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$/u;
-  
-    if (!usernamePattern.test(username)) {
-      Alert.alert('Error', 'Invalid username format.');
-      return;
-    }
-  
     try {
       setLoading(true);
   
-      // Sign up with Cognito
-      const response = await fetch('http://localhost:3000/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          email,
-          password,
-          age: parseInt(age, 10),
-        }),
-      });
+      // Sign up user in Cognito
+      const signUpResponse = await signUp(name, surname, age, email, password);
   
-      const data = await response.json();
+      const userId = signUpResponse.UserSub; // Cognito user ID
+      console.log('User ID from Cognito:', userId);
+  
+      // Create user profile
+      await createProfile(userId, name, email, parseInt(age, 10));
+  
+      Alert.alert('Success', 'Account created! Please verify your email.');
+      navigation.navigate('ConfirmSignup', { username: `${name}_${surname}`, email });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Something went wrong');
+    } finally {
       setLoading(false);
-  
-      if (response.ok) {
-        console.log("response" + data)
-        console.log("response stringified" + JSON.stringify(data))
-        const userId = data.UserSub; // Cognito user ID
-        console.log("User ID from Cognito:", userId);
-  
-        // Create user profile in your backend (use hardcoded picture)
-        await fetch('http://localhost:3000/profiles', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cognitoId: userId, // Store Cognito user ID
-            name,
-            email,
-            age: parseInt(age, 10),
-          }),
-        });
-  
-        Alert.alert('Success', 'Account created! Please verify your email.');
-        navigation.navigate('ConfirmSignup', { username, email });  // Pass user ID to confirmation screen
-      } else {
-        Alert.alert('Error', data.message || 'Failed to register');
-      }
-    } catch (error) {
-      setLoading(false);
-      console.error('Signup Error:', error);
-      Alert.alert('Error', 'Something went wrong');
     }
   };
 
