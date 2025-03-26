@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import AddWandooFormAndroid from '../components/AddWandooFormAndroid';
 import AddWandooFormWeb from '../components/AddWandooFormWeb';
-import { fetchMyWandoos, fetchAddress } from '../services/wandoo.service'; // Import from wandoo.service
+import { fetchMyWandoos, fetchAddress } from '../services/wandoo.service';
 
 interface Wandoo {
   id: number;
@@ -35,20 +35,15 @@ const MyWandoosScreen: React.FC = () => {
     fetchWandoos();
   }, []);
 
-  // Fetch Wandoos and addresses
   const fetchWandoos = async () => {
     setLoading(true);
     try {
-      const wandoosData = await fetchMyWandoos(); // Get the Wandoos data
+      const wandoosData = await fetchMyWandoos();
       setWandoos(wandoosData);
 
-      // Fetch the address for each Wandoo's latitude and longitude
       wandoosData.forEach(async (wandoo: Wandoo) => {
         const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
-        setAddresses((prev) => ({
-          ...prev,
-          [wandoo.id]: address,
-        }));
+        setAddresses((prev) => ({ ...prev, [wandoo.id]: address }));
       });
     } catch (error) {
       console.error('Error fetching Wandoos', error);
@@ -61,10 +56,7 @@ const MyWandoosScreen: React.FC = () => {
   const renderWandooItem = ({ item }: { item: Wandoo }) => (
     <View style={styles.wandooItem}>
       <Text style={styles.title}>{item.title}</Text>
-      <Image 
-        source={{ uri: item.picture }} 
-        style={styles.image} 
-      />
+      <Image source={{ uri: item.picture }} style={styles.image} />
       <Text style={styles.date}>{formatDateTime(item.eventDate)}</Text>
       <Text style={styles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
       <Text style={styles.description}>{item.description}</Text>
@@ -74,7 +66,7 @@ const MyWandoosScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       ) : wandoos.length === 0 ? (
         <View style={styles.noWandoosContainer}>
           <Text style={styles.noWandoosText}>No Wandoos yet, so what you wannadoo?</Text>
@@ -84,22 +76,21 @@ const MyWandoosScreen: React.FC = () => {
           data={wandoos}
           renderItem={renderWandooItem}
           keyExtractor={(item) => item.id.toString()}
-          style={styles.list}
+          style={Platform.OS === 'web' ? styles.listWeb : undefined}
+          ListFooterComponent={<View style={{ height: 80 }} />}
         />
       )}
 
-      {/* Floating Add Button */}
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.plusSign}>+</Text>
       </TouchableOpacity>
 
-      {/* Add Wandoo Modal */}
       {Platform.OS === 'web' ? (
         <AddWandooFormWeb 
           visible={modalVisible} 
           onClose={() => {
             setModalVisible(false);
-            fetchWandoos(); // Refresh the list after closing the modal
+            fetchWandoos();
           }} 
         />
       ) : (
@@ -107,7 +98,7 @@ const MyWandoosScreen: React.FC = () => {
           visible={modalVisible} 
           onClose={() => {
             setModalVisible(false);
-            fetchWandoos(); // Refresh the list after closing the modal
+            fetchWandoos();
           }} 
         />
       )}
@@ -118,23 +109,22 @@ const MyWandoosScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f5f5f5', // Match WandoosScreen background
   },
-  list: {
-    width: '100%',
-    paddingBottom: 100, // Add padding to the bottom to account for the add button
+  listWeb: {
+    width: '65%',
   },
   wandooItem: {
     width: '100%',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: 'black',
     borderRadius: 10,
-    padding: 10,
+    padding: 15,
     backgroundColor: 'white',
+    marginBottom: 15,
     alignItems: 'center',
-    marginBottom: 20,
   },
   title: {
     fontSize: 20,
@@ -149,26 +139,27 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 16,
-    fontWeight: '600',
+    color: 'gray',
     marginBottom: 5,
   },
   location: {
     fontSize: 16,
-    fontWeight: '600',
+    color: 'gray',
     marginBottom: 5,
   },
   description: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
+    marginBottom: 15,
   },
   addButton: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 25,
     alignSelf: 'center',
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'lightblue',
+    backgroundColor: 'lightblue', // Match WandoosScreen button color
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -187,10 +178,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noWandoosText: {
-    fontSize: 18,
+    fontSize: 20, // Match WandoosScreen text size
     fontWeight: 'bold',
     color: 'gray',
     textAlign: 'center',
+    marginTop: 50,
+  },
+  loadingText: {
+    fontSize: 20,
+    color: 'gray',
   },
 });
 

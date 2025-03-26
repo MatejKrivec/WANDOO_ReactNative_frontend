@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  View, Text, TextInput, Button, StyleSheet, Alert 
+  View, Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView 
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -55,57 +55,66 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Name" 
-        value={name} 
-        onChangeText={setName} 
-      />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Surname" 
-        value={surname} 
-        onChangeText={setSurname} 
-      />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Age" 
-        value={age} 
-        onChangeText={setAge} 
-        keyboardType="numeric" 
-      />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Email" 
-        value={email} 
-        onChangeText={setEmail} 
-        keyboardType="email-address" 
-        autoCapitalize="none" 
-      />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Password" 
-        value={password} 
-        onChangeText={setPassword} 
-        secureTextEntry 
-      />
-      <TextInput 
-        style={styles.input} 
-        placeholder="Confirm Password" 
-        value={confirmPassword} 
-        onChangeText={setConfirmPassword} 
-        secureTextEntry 
-      />
-      <Button title={loading ? 'Registering...' : 'Register'} onPress={handleSignup} disabled={loading} />
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Sign Up</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Name" 
+          value={name} 
+          onChangeText={setName} 
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Surname" 
+          value={surname} 
+          onChangeText={setSurname} 
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Age" 
+          value={age} 
+          onChangeText={setAge} 
+          keyboardType="numeric" 
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Email" 
+          value={email} 
+          onChangeText={setEmail} 
+          keyboardType="email-address" 
+          autoCapitalize="none" 
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Password" 
+          value={password} 
+          onChangeText={setPassword} 
+          secureTextEntry 
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Confirm Password" 
+          value={confirmPassword} 
+          onChangeText={setConfirmPassword} 
+          secureTextEntry 
+        />
+        <Button title={loading ? 'Registering...' : 'Register'} onPress={handleSignup} disabled={loading} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,

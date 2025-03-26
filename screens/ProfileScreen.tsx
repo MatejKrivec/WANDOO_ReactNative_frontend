@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, Platform, TouchableOpacity } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchCurrentUserProfile, uploadProfilePicture, updateProfilePicture } from '../services/profile.service';
+import { fetchCurrentUserProfile, uploadProfilePicture, updateProfilePicture, uploadProfilePictureForAndroid } from '../services/profile.service';
 
 const ProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -25,25 +23,59 @@ const ProfileScreen: React.FC = () => {
     loadProfile();
   }, []);
 
-  // Open image picker to select a new image
+  // Open image picker to select a new image webb
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+    let result;
+    if (Platform.OS === 'web') {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], // Fix: Use ['images'] instead of MediaTypeOptions
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+    }
+
+    console.log(result); // Debugging output
 
     if (!result.canceled) {
       setNewProfilePic(result.assets[0].uri);
     }
   };
 
-  // Upload and update profile picture
-  const handleImageUpload = async () => {
+  // Upload and update profile picture Weeb
+ /* const handleImageUpload = async () => {
     if (!newProfilePic) return;
     try {
       const uploadedImageUrl = await uploadProfilePicture(newProfilePic, profile?.picture);
+      const updatedProfile = await updateProfilePicture(uploadedImageUrl);
+      setProfile(updatedProfile);
+      setNewProfilePic(null);
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
+  };*/
+
+  const handleImageUpload = async () => {
+    if (!newProfilePic) return;
+
+    console.log("New profile pic: " + newProfilePic)
+  
+    try {
+      let uploadedImageUrl;
+      
+      if (Platform.OS === 'android' || 'ios') {
+        uploadedImageUrl = await uploadProfilePictureForAndroid(newProfilePic, profile?.picture);
+      } else {
+        uploadedImageUrl = await uploadProfilePicture(newProfilePic, profile?.picture);
+      }
+  
       const updatedProfile = await updateProfilePicture(uploadedImageUrl);
       setProfile(updatedProfile);
       setNewProfilePic(null);

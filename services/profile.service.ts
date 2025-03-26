@@ -105,6 +105,43 @@ export const fetchCurrentUserProfile = async () => {
       throw error;
     }
   };
+
+  export const uploadProfilePictureForAndroid = async (imageUri: string, oldImageUrl?: string) => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token found');
+  
+      const formData = new FormData();
+      formData.append('file', {
+        uri: imageUri,
+        name: 'profile.jpg',
+        type: 'image/jpeg', // Ensure correct type
+      } as any); // TypeScript fix
+  
+      if (oldImageUrl) {
+        formData.append('oldImageUrl', oldImageUrl);
+      }
+  
+      const response = await fetch(`${API_BASE_URL}/s3/change-profile-pic`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data', // Required for React Native
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+  
+      const responseData = await response.json();
+      return responseData.url;
+    } catch (error: any) {
+      console.error('Android Profile Pic Upload Error:', error);
+      throw error;
+    }
+  };
   
   // Update profile picture in backend
   export const updateProfilePicture = async (newImageUrl: string) => {

@@ -1,11 +1,12 @@
 // friends.service.ts
 import { getToken } from './token.service';
+import { API_BASE_URL } from './config';
 
 // Fetch list of friends
 export const fetchFriendships = async () => {
   try {
     const token = await getToken();
-    const response = await fetch('http://localhost:3000/friends/list', {
+    const response = await fetch(`${API_BASE_URL}/friends/list`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -28,7 +29,7 @@ export const fetchFriendships = async () => {
 export const sendFriendRequest = async (userId: string) => {
   try {
     const token = await getToken();
-    const response = await fetch(`http://localhost:3000/friends/request/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/friends/request/${userId}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -50,7 +51,7 @@ export const sendFriendRequest = async (userId: string) => {
 export const acceptFriendRequest = async (userId: string) => {
   try {
     const token = await getToken();
-    const response = await fetch(`http://localhost:3000/friends/accept/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/friends/accept/${userId}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -72,7 +73,7 @@ export const acceptFriendRequest = async (userId: string) => {
 export const removeFriend = async (userId: string) => {
   try {
     const token = await getToken();
-    const response = await fetch(`http://localhost:3000/friends/remove/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/friends/remove/${userId}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,

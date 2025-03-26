@@ -1,6 +1,6 @@
 // screens/WandoosScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform } from 'react-native';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { fetchFriendsWandoos, fetchJoinedWandoos, fetchAddress, joinWandoo } from '../services/wandoo.service';
@@ -127,7 +127,11 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
       {wandoos.length === 0 ? (
         <Text style={styles.noWandoosText}>Seems like people don't Wandoo anything yet!</Text>
       ) : (
-        <FlatList data={wandoos} keyExtractor={(item) => item.id.toString()} renderItem={renderWandoo} />
+        <FlatList 
+         data={wandoos} 
+         style={Platform.OS === 'web' ? styles.listWeb : undefined}
+         keyExtractor={(item) => item.id.toString()} 
+         renderItem={renderWandoo} />
       )}
     </View>
   );
@@ -135,6 +139,9 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', padding: 20, backgroundColor: '#f5f5f5' },
+  listWeb: {
+    width: '65%',
+  },
   wandooItem: { width: '100%', borderWidth: 2, borderColor: 'black', borderRadius: 10, padding: 15, backgroundColor: 'white', marginBottom: 15, alignItems: 'center' },
   profileContainer: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 10 },
   profileImage: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },

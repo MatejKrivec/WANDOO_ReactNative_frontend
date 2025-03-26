@@ -3,17 +3,18 @@ import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Image, Aler
 import MapView, { Marker } from 'react-native-maps';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-
+import { fetchLocationCoordinates, fetchAddress, saveWandoo, uploadImageToS3, uploadImageToS3Android } from '../services/wandoo.service';
+import moment from 'moment';
 
 interface AddWandooFormProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }) => {
+const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }) => {
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [date, setDate] = useState(''); // Changed to string
+  const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address: string }>({
@@ -24,99 +25,129 @@ const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  // ✅ Pick an image from gallery
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], // Fix: Use ['images'] instead of MediaTypeOptions
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+    
+      console.log(result); // Debugging output
+    
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    };
 
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  // ✅ Save Wandoo event
-  const handleSave = () => {
-    if (!title || !date || !time || !location.address) {
-      Alert.alert('Error', 'Please fill in all fields.');
-      return;
-    }
-
-  
-
-    onClose();
-  };
-
-  // ✅ Handle map press to update location
-  const handleMapPress = async (event: { nativeEvent: { coordinate: { latitude: number; longitude: number; }; }; }) => {
+  // ✅ Handle map press to update location & fetch address
+  const handleMapPress = async (event: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     try {
-      const response = await fetch(`http://localhost:3000/geo/reverse-geocode?lat=${latitude}&lng=${longitude}`);
-      const data = await response.json();
-      const address = data.address;
-      setLocation({
-        latitude,
-        longitude,
-        address,
-      });
+      const address = await fetchAddress(latitude, longitude);
+      setLocation({ latitude, longitude, address });
     } catch (error) {
       console.error('Error fetching address:', error);
       Alert.alert('Error', 'Failed to fetch address');
     }
   };
 
+  // ✅ Save Wandoo event
+  const handleSave = async  () => {
+    if (!title || !description || !location.address) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+
+    try {
+  let imageUrl = null;
+    if (image) {
+      //imageUrl =  await uploadImageToS3(image); WEEB
+      imageUrl =  await uploadImageToS3Android(image);
+      
+    }
+
+    console.log("Date and time: " + date)
+
+    const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
+          const eventDate = localTime.toISOString();
+
+    const newWandoo = {
+      title,
+      description,
+      eventDate,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      picture: imageUrl,
+    };
+    console.log("New wandoo!")
+    console.log(newWandoo)
+
+    await saveWandoo(newWandoo);
+    Alert.alert('Success', 'Wandoo created successfully!');
+    onClose();
+     
+    } catch (error: any) {
+      console.error('Error saving Wandoo:', error);
+
+    // Handling the error message
+    const errorMessage = error?.message || 'Failed to create Wandoo';
+    Alert.alert('Error', errorMessage);
+    }
+  };
+
   return (
     <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
       <View style={styles.modalContainer}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Add a New Wandoo</Text>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add a New Wandoo</Text>
 
-          <TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} />
+            <TextInput style={styles.input} placeholder="Title" value={title} onChangeText={setTitle} />
 
-          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Text style={styles.imagePickerText}>{image ? 'Change Image' : 'Pick an Image'}</Text>
-          </TouchableOpacity>
-          {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              <Text style={styles.imagePickerText}>{image ? 'Change Image' : 'Pick an Image'}</Text>
+            </TouchableOpacity>
+            {image && <Image source={{ uri: image }} style={styles.previewImage} />}
 
-          <Text style={styles.label}>Select Date</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.input}>{date.toDateString()}</Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) setDate(selectedDate);
-              }}
-            />
-          )}
+          
+                    <Text style={styles.label}>Select Date</Text>
+                    <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                      <Text style={styles.input}>{date ? moment(date).format('YYYY-MM-DD') : 'Select Date'}</Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={date ? new Date(date) : new Date()}
+                        mode="date"
+                        display="default"
+                        onChange={(event, selectedDate) => {
+                          setShowDatePicker(false);
+                          if (selectedDate) setDate(moment(selectedDate).format('YYYY-MM-DD'));
+                        }}
+                      />
+                    )}
 
-          <Text style={styles.label}>Pick the Time</Text>
-          <TouchableOpacity onPress={() => setShowTimePicker(true)}>
-            <Text style={styles.input}>{time.toTimeString().slice(0, 5)}</Text>
-          </TouchableOpacity>
-          {showTimePicker && (
-            <DateTimePicker
-              value={time}
-              mode="time"
-              display="default"
-              onChange={(event, selectedTime) => {
-                setShowTimePicker(false);
-                if (selectedTime) setTime(selectedTime);
-              }}
-            />
-          )}
+                    <Text style={styles.label}>Pick the Time</Text>
+                    <TouchableOpacity onPress={() => setShowTimePicker(true)}>
+                      <Text style={styles.input}>{time ? time : 'Select Time'}</Text>
+                    </TouchableOpacity>
+                    {showTimePicker && (
+                      <DateTimePicker
+                        value={time ? new Date(`1970-01-01T${time}:00`) : new Date()}
+                        mode="time"
+                        display="default"
+                        onChange={(event, selectedTime) => {
+                          setShowTimePicker(false);
+                          if (selectedTime) setTime(moment(selectedTime).format('HH:mm'));
+                        }}
+                      />
+                    )}
+                  
 
-          <TextInput style={styles.input} placeholder="Description" value={description} onChangeText={setDescription} multiline />
+            <TextInput style={styles.inputDescription} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-        {/* {Platform.OS !== 'web' && (
+        {/*{Platform.OS !== 'web' && (
               <MapView
                 style={styles.map}
                 region={{
@@ -129,19 +160,26 @@ const  AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose 
               >
                 <Marker coordinate={location} title={location.address} />
               </MapView>
-            )} */}  
+            )} */}    
+        
 
-          {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}
+            {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleSave}>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={onClose}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+              style={[styles.modalButton, styles.saveButton]}
+              onPress={() => {
+                console.log("Save button pressed"); // Check if the event is being triggered
+                handleSave();
+              }}
+            >
               <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
+            </View>
           </View>
-        </View>
         </ScrollView>
       </View>
     </Modal>
@@ -158,7 +196,7 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingVertical: 20, // Adjust spacing
+    paddingVertical: 100, // Use 100 for ios
   },
   modalContent: {
     width: '90%',
@@ -179,6 +217,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
+  },
+  inputDescription: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    marginTop: 10,
   },
   imagePicker: {
     backgroundColor: 'lightblue',

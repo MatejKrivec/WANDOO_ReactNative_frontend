@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Dimensions, Alert } from 'react-native';
+import { 
+  View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, Dimensions, Alert 
+} from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,15 +18,10 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   const { title, image, id } = route.params;
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const { height } = Dimensions.get('window'); // Get screen height
-
-  const getToken = async () => {
-    return Platform.OS === 'web'
-      ? await AsyncStorage.getItem('authToken')
-      : await SecureStore.getItemAsync('authToken');
-  };
 
   const loadMessages = async () => {
     try {
@@ -41,6 +38,7 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   };
 
   useEffect(() => {
+    console.log(route.params);
     loadMessages();
   }, [id]);
 
@@ -78,15 +76,17 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   );
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <View>
       {/* Header */}
-      <View style={[styles.header, { height: height * 0.1 }]}>
-        <Image source={image} style={styles.headerImage} />
+      <View style={[styles.header, { height: height * 0.08 }]}>
+        <Image source={{ uri: image }} style={styles.headerImage} />
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
 
-      {/* Scrollable Messages */}
-      <View style={[styles.messagesContainer, { height: height * 0.73 }]}>
+      {/* Scrollable Messages  --->  Fix  this for iphone */}
+      <View style={[styles.messagesContainer, { 
+  height: Platform.OS === 'web' ? height * 0.7 : isTyping ? (Platform.OS === 'ios' ? height * 0.4 : height * 0.3) : height * 0.7 
+}]}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -105,12 +105,14 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
           onChangeText={setNewMessage}
           placeholder="Type a message"
           style={styles.textInput}
+          onFocus={() => setIsTyping(true)}
+          onBlur={() => setIsTyping(false)}
         />
         <TouchableOpacity onPress={handleSendMessage} style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location'; // Import Location API
+import * as Location from 'expo-location'; 
 import { signIn } from '../services/auth.service';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -19,17 +17,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('Matej123!');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  const [locationGranted, setLocationGranted] = useState(false); // Track location permission status
+  const [locationGranted, setLocationGranted] = useState(false);
 
-  const storeToken = async (token: string) => {
-    if (Platform.OS === 'web') {
-      await AsyncStorage.setItem('authToken', token);
-    } else {
-      await SecureStore.setItemAsync('authToken', token);
-    }
-  };
-
-  // Function to fetch user location
   const fetchLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -43,10 +32,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setLatitude(location.coords.latitude);
       setLongitude(location.coords.longitude);
 
-      // Log the location to the console
       console.log('Latitude:', location.coords.latitude);
       console.log('Longitude:', location.coords.longitude);
-      setLocationGranted(true); // Location permission granted and location fetched
+      setLocationGranted(true);
     } catch (error) {
       console.error('Location Error:', error);
       setLocationGranted(false);
@@ -54,30 +42,26 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   useEffect(() => {
-    // Fetch location when the component is mounted
     fetchLocation();
-  }, []); // Empty dependency array ensures it runs only once when the component mounts
+  }, []);
 
   const handleLogin = async () => {
     if (!name || !surname || !password) {
       Alert.alert('Error', 'All fields are required!');
       return;
     }
-  
-    // Ensure location is granted and fetched before proceeding
+
     if (!locationGranted) {
       Alert.alert('Error', 'Location permission is required to proceed!');
       return;
     }
-  
+
     const username = `${name.trim()}_${surname.trim()}`;
-  
+
     try {
-      const data = await signIn(username, password); // Call the imported function
-  
+      const data = await signIn(username, password);
       console.log('Login successful:', data);
-  
-      // Wait a moment to ensure location is set before navigating
+
       setTimeout(() => {
         navigation.replace('Landing', { latitude, longitude });
       }, 500);
@@ -87,22 +71,30 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login Screen</Text>
-      <Text style={styles.locationMessage}>
-        In order to login, you must allow location access.
-      </Text>
-      <TextInput style={styles.input} placeholder="First Name" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Last Name" value={surname} onChangeText={setSurname} />
-      <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
-      <Button title="Login" onPress={handleLogin} disabled={!locationGranted} />
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Login</Text>
+        <Text style={styles.locationMessage}>
+          In order to login, you must allow location access.
+        </Text>
+        <TextInput style={styles.input} placeholder="First Name" value={name} onChangeText={setName} />
+        <TextInput style={styles.input} placeholder="Last Name" value={surname} onChangeText={setSurname} />
+        <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+        <Button title="Login" onPress={handleLogin} disabled={!locationGranted} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -115,6 +107,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
     marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
     width: '100%',
