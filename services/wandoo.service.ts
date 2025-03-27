@@ -1,4 +1,3 @@
-// wandoo.service.ts
 import { getToken } from './token.service';
 import { API_BASE_URL } from './config';
 
@@ -20,7 +19,7 @@ export const fetchMyWandoos = async () => {
   }
 };
 
-// Fetch address from latitude and longitude
+
 export const fetchAddress = async (lat: number, lng: number): Promise<string> => {
   try {
     const token = await getToken();
@@ -37,7 +36,7 @@ export const fetchAddress = async (lat: number, lng: number): Promise<string> =>
   }
 };
 
-// Geocode address to get coordinates
+
 export const fetchLocationCoordinates = async (address: string) => {
   try {
     const token = await getToken();
@@ -55,7 +54,7 @@ export const fetchLocationCoordinates = async (address: string) => {
   }
 };
 
-// Upload image to S3 and return the URL
+
 export const uploadImageToS3 = async (imageUri: string) => {
   const response = await fetch(imageUri);
   const blob = await response.blob();
@@ -75,7 +74,7 @@ export const uploadImageToS3 = async (imageUri: string) => {
   return responseData.url;
 };
 
-// Upload image to S3 for Android
+
 export const uploadImageToS3Android = async (imageUri: string) => {
   try {
     const token = await getToken();
@@ -107,7 +106,7 @@ export const uploadImageToS3Android = async (imageUri: string) => {
   }
 };
 
-// Save new Wandoo
+
 export const saveWandoo = async (wandooData: any) => {
   try {
     const token = await getToken();
@@ -130,7 +129,7 @@ export const saveWandoo = async (wandooData: any) => {
   }
 };
 
-// Fetch friends' Wandoos
+
 export const fetchFriendsWandoos = async () => {
   const token = await getToken();
   if (!token) throw new Error('No auth token found');
@@ -144,7 +143,7 @@ export const fetchFriendsWandoos = async () => {
   return response.json();
 };
 
-// Fetch joined Wandoos
+
 export const fetchJoinedWandoos = async () => {
   const token = await getToken();
   if (!token) throw new Error('No auth token found');
@@ -158,7 +157,6 @@ export const fetchJoinedWandoos = async () => {
   return response.json();
 };
 
-// Join a Wandoo
 export const joinWandoo = async (wandooId: number) => {
   const token = await getToken();
   const response = await fetch(`${API_BASE_URL}/chatrooms/join`, {

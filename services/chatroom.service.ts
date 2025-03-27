@@ -1,5 +1,4 @@
-// chatroom.service.ts
-import { getToken } from './token.service'; // Assuming getToken is a utility function
+import { getToken } from './token.service'; 
 import { Alert } from 'react-native';
 import { API_BASE_URL } from './config';
 

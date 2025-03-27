@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as Location from 'expo-location'; 

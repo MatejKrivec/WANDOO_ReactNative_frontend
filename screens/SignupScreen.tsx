@@ -36,13 +36,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setLoading(true);
   
-      // Sign up user in Cognito
       const signUpResponse = await signUp(name, surname, age, email, password);
   
-      const userId = signUpResponse.UserSub; // Cognito user ID
+      const userId = signUpResponse.UserSub; 
       console.log('User ID from Cognito:', userId);
   
-      // Create user profile
       await createProfile(userId, name, email, parseInt(age, 10));
   
       Alert.alert('Success', 'Account created! Please verify your email.');

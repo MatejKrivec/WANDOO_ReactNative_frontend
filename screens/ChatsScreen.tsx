@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { RouteProp, useFocusEffect } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For web
-import * as SecureStore from 'expo-secure-store'; // For mobile
-import { StackNavigationProp } from '@react-navigation/stack'; // For navigation
+import { StackNavigationProp } from '@react-navigation/stack'; 
 import { fetchChatRooms } from '../services/chatroom.service';
 
 type ChatsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ChatsScreen'>;
@@ -14,8 +12,8 @@ type Props = {
 };
 
 const ChatsScreen: React.FC<Props> = ({ navigation }) => {
-  // State to store chat rooms data
-  const [chatRooms, setChatRooms] = useState<any[]>([]); // Change 'any' type based on your response type
+
+  const [chatRooms, setChatRooms] = useState<any[]>([]); 
  
   const loadChatRooms = async () => {
     try {
@@ -36,7 +34,7 @@ const ChatsScreen: React.FC<Props> = ({ navigation }) => {
   const renderChatRoom = ({ item }: { item: typeof chatRooms[0] }) => (
     <TouchableOpacity
       style={styles.chatRoomItem}
-      onPress={() => navigation.navigate('ChatRoom', { title: item.title, image: item.picture, id: item.id })} // Navigate to the chat room
+      onPress={() => navigation.navigate('ChatRoom', { title: item.title, image: item.picture, id: item.id })} 
     >
       <Image source={{ uri: item.picture }} style={styles.chatRoomImage} />
       <View style={styles.chatRoomDetails}>
@@ -51,12 +49,10 @@ const ChatsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <>
     
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chat Rooms</Text>
       </View>
 
-      {/* Chat Rooms List */}
       <FlatList
         data={chatRooms}
         renderItem={renderChatRoom}

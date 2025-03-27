@@ -4,8 +4,6 @@ import {
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
 import { sendMessage, fetchMessages } from '../services/chatroom.service';
 
 type ChatRoomRouteProp = RouteProp<RootStackParamList, 'ChatRoom'>;
@@ -47,8 +45,8 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
       try {
         const data = await sendMessage(id, newMessage);
         if (data) {
-          setNewMessage(''); // Clear input field after sending
-          loadMessages(); // Reload messages after sending a new one
+          setNewMessage(''); 
+          loadMessages(); 
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
           }, 100);
@@ -141,7 +139,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   messagesContainer: {
-    overflow: 'hidden', // Prevent overflow
+    overflow: 'hidden', 
   },
   messagesList: {
     flex: 1,

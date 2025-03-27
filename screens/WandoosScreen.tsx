@@ -1,11 +1,9 @@
-// screens/WandoosScreen.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform } from 'react-native';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { fetchFriendsWandoos, fetchJoinedWandoos, fetchAddress, joinWandoo } from '../services/wandoo.service';
 
-// Define route props type
 type WandoosScreenRouteProp = RouteProp<RootStackParamList, 'Wandoos'>;
 
 type Props = {
@@ -13,31 +11,27 @@ type Props = {
 };
 
 const WandoosScreen: React.FC<Props> = ({ route }) => {
-  const { latitude, longitude } = route.params; // Get location from navigation params
+  const { latitude, longitude } = route.params; 
   const [wandoos, setWandoos] = useState<any[]>([]);
   const [addresses, setAddresses] = useState<{ [key: string]: string }>({});
   const [joinedWandoos, setJoinedWandoos] = useState<number[]>([]);
 
-  // Fetch Wandoos
   const fetchWandoosData = async () => {
     try {
       const wandoosData = await fetchFriendsWandoos();
       setWandoos(wandoosData);
 
-      // Fetch addresses
       wandoosData.forEach(async (wandoo: any) => {
         const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
         setAddresses((prev) => ({ ...prev, [wandoo.id]: address }));
       });
 
-      // Sort Wandoos by distance
       sortWandoosByDistance(wandoosData);
     } catch (error) {
       console.error('Error fetching Wandoos:', error);
     }
   };
 
-  // Fetch joined Wandoos
   const fetchJoinedData = async () => {
     try {
       const joined = await fetchJoinedWandoos();
@@ -87,7 +81,6 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     }
   };
 
-  // Fetch data when the screen is focused
   useFocusEffect(
     useCallback(() => {
       console.log("The wandoo longitude and latitude: " + latitude + ", " + longitude);

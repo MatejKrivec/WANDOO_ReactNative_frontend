@@ -16,12 +16,11 @@ import { View, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define types for stack navigation
 export type RootStackParamList = {
   Home: undefined;
   Login: undefined;
   Signup: undefined;
-  Landing: { latitude: number | null; longitude: number | null };  // Pass location
+  Landing: { latitude: number | null; longitude: number | null };  
   Wandoos: { latitude: number | null; longitude: number | null };
   ChatsScreen: undefined;
   ChatRoom: { title: string; image: any, id: any };
@@ -31,7 +30,6 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 const Drawer = createDrawerNavigator();
 
-// Function to delete token based on platform
 const deleteToken = async () => {
   if (Platform.OS === 'web') {
     await AsyncStorage.removeItem('authToken');
@@ -40,12 +38,10 @@ const deleteToken = async () => {
   }
 };
 
-// Custom Drawer content
 export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {/* Drawer Items */}
         <DrawerItem
           label="Profile"
           onPress={() => props.navigation.navigate('Profile')}
@@ -68,7 +64,6 @@ export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         />
       </View>
 
-      {/* Logout Button - Placed at the Bottom */}
       <View style={{ borderTopWidth: 1, borderTopColor: '#ccc', paddingTop: 10 }}>
         <DrawerItem
           label="Logout"
@@ -112,7 +107,6 @@ const DrawerNavigator = ({ route }: { route: RouteProp<RootStackParamList, 'Land
   );
 };
 
-// AppNavigator with Stack Navigator
 const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
@@ -120,37 +114,36 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
-          options={{ headerShown: false }} // Hide header for Home
+          options={{ headerShown: false }} 
         />
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
-          options={{ headerShown: true }} // Show header for Login
+          options={{ headerShown: true }} 
         />
         <Stack.Screen 
           name="Signup" 
           component={SignupScreen} 
-          options={{ headerShown: true }} // Show header for Register
+          options={{ headerShown: true }} 
         />
          <Stack.Screen 
           name="ConfirmSignup" 
           component={ConfirmSignupScreen} 
-          options={{ headerShown: true }} // Show header for ConfirmSignup
+          options={{ headerShown: true }} 
         />
         <Stack.Screen 
           name="Landing" 
           component={DrawerNavigator} 
-          options={{ headerShown: false }} // Hide header for Landing (Drawer Navigator)
+          options={{ headerShown: false }} 
         />
         <Stack.Screen 
           name="ChatRoom" 
-          component={ChatRoom} // Add ChatRoom screen to the stack
-          options={{ headerShown: true }} // Show header for ChatRoom
+          component={ChatRoom} 
+          options={{ headerShown: true }} 
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
 
-// Default export for AppNavigator
 export default AppNavigator;

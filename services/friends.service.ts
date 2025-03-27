@@ -1,8 +1,6 @@
-// friends.service.ts
 import { getToken } from './token.service';
 import { API_BASE_URL } from './config';
 
-// Fetch list of friends
 export const fetchFriendships = async () => {
   try {
     const token = await getToken();

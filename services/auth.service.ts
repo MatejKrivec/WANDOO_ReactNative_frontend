@@ -49,7 +49,7 @@ export const signUp = async (name: string, surname: string, age: string, email: 
       throw new Error(data.message || 'Failed to register');
     }
 
-    return data; // Return the response so the UI can handle success
+    return data; 
   } catch (error) {
     console.error('Signup Error:', error);
     throw error;

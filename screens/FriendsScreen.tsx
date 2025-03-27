@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image, Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Image} from 'react-native';
 import { fetchCurrentUserProfile, fetchAllProfiles } from '../services/profile.service';
 import { fetchFriendships, sendFriendRequest, acceptFriendRequest, removeFriend } from '../services/friends.service';
-import { getToken } from '../services/token.service';
 
 interface Friend {
   id: string;
   name: string;
-  profilePic: any; // Use 'any' type for local image source
-  status: 'friend' | 'pending' | 'add' | 'accept'; // 'friend', 'pending', 'add' will be used for statuses
+  profilePic: any; 
+  status: 'friend' | 'pending' | 'add' | 'accept'; 
 }
 
 const FriendsScreen: React.FC = () => {
@@ -86,7 +83,7 @@ const FriendsScreen: React.FC = () => {
   const handleAcceptFriendRequest = async (userId: string) => {
     try {
       await acceptFriendRequest(userId);
-      fetchProfiles(); // Re-fetch profiles to update the state
+      fetchProfiles(); 
     } catch (error) {
       console.error('Error accepting friend request:', error);
     }
@@ -95,7 +92,7 @@ const FriendsScreen: React.FC = () => {
   const handleRemoveFriend = async (userId: string) => {
     try {
       await removeFriend(userId);
-      fetchProfiles(); // Re-fetch profiles to update the state
+      fetchProfiles();
     } catch (error) {
       console.error('Error removing friend:', error);
     }

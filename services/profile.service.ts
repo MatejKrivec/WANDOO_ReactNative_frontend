@@ -71,7 +71,7 @@ export const fetchCurrentUserProfile = async () => {
     }
   };
   
-  // Upload new profile picture
+
   export const uploadProfilePicture = async (imageUri: string, oldImageUrl?: string) => {
     try {
       const token = await getToken();
@@ -115,8 +115,8 @@ export const fetchCurrentUserProfile = async () => {
       formData.append('file', {
         uri: imageUri,
         name: 'profile.jpg',
-        type: 'image/jpeg', // Ensure correct type
-      } as any); // TypeScript fix
+        type: 'image/jpeg', 
+      } as any); 
   
       if (oldImageUrl) {
         formData.append('oldImageUrl', oldImageUrl);
@@ -127,7 +127,7 @@ export const fetchCurrentUserProfile = async () => {
         body: formData,
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // Required for React Native
+          'Content-Type': 'multipart/form-data', 
         },
       });
   
@@ -143,7 +143,6 @@ export const fetchCurrentUserProfile = async () => {
     }
   };
   
-  // Update profile picture in backend
   export const updateProfilePicture = async (newImageUrl: string) => {
     try {
       const token = await getToken();

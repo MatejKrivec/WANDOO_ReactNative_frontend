@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, FlatList, Image, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import debounce from 'lodash.debounce';
-import { fetchLocationCoordinates, fetchAddress, uploadImageToS3, saveWandoo } from '../services/wandoo.service';
+import { fetchLocationCoordinates, uploadImageToS3, saveWandoo } from '../services/wandoo.service';
 import moment from 'moment-timezone';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -36,7 +36,6 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     return await AsyncStorage.getItem('authToken');
   };
 
-  // ✅ Debounced function to fetch location coordinates
   const fetchLocation = useCallback(
     debounce(async (text: string) => {
       if (!text) return setPredictions([]);
@@ -45,7 +44,7 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
         const locationData = await fetchLocationCoordinates(text);
         if (locationData) {
           setLocation(locationData);
-          setPredictions([{ description: text, place_id: '' }]); // Clear predictions after selection
+          setPredictions([{ description: text, place_id: '' }]); 
         } else {
           setPredictions([]);
         }
@@ -66,7 +65,6 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     }
   }, [input]);
 
-  // ✅ Pick an image from gallery
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,

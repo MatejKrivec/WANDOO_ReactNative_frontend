@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Image, Aler
 import MapView, { Marker } from 'react-native-maps';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchLocationCoordinates, fetchAddress, saveWandoo, uploadImageToS3, uploadImageToS3Android } from '../services/wandoo.service';
+import {  fetchAddress, saveWandoo,  uploadImageToS3Android } from '../services/wandoo.service';
 import moment from 'moment';
 
 interface AddWandooFormProps {
@@ -13,7 +13,7 @@ interface AddWandooFormProps {
 
 const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }) => {
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState(''); // Changed to string
+  const [date, setDate] = useState(''); 
   const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -33,14 +33,13 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
         quality: 1,
       });
     
-      console.log(result); // Debugging output
+      console.log(result); 
     
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
     };
 
-  // ✅ Handle map press to update location & fetch address
   const handleMapPress = async (event: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     try {
@@ -52,7 +51,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
     }
   };
 
-  // ✅ Save Wandoo event
   const handleSave = async  () => {
     if (!title || !description || !location.address) {
       Alert.alert('Error', 'Please fill in all fields.');
@@ -63,7 +61,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
     try {
   let imageUrl = null;
     if (image) {
-      //imageUrl =  await uploadImageToS3(image); WEEB
       imageUrl =  await uploadImageToS3Android(image);
       
     }
@@ -91,7 +88,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
     } catch (error: any) {
       console.error('Error saving Wandoo:', error);
 
-    // Handling the error message
     const errorMessage = error?.message || 'Failed to create Wandoo';
     Alert.alert('Error', errorMessage);
     }

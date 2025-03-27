@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5', // Match WandoosScreen background
+    backgroundColor: '#f5f5f5', 
   },
   listWeb: {
     width: '65%',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'lightblue', // Match WandoosScreen button color
+    backgroundColor: 'lightblue', 
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   noWandoosText: {
-    fontSize: 20, // Match WandoosScreen text size
+    fontSize: 20, 
     fontWeight: 'bold',
     color: 'gray',
     textAlign: 'center',

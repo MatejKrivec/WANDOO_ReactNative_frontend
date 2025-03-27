@@ -23,7 +23,6 @@ const ProfileScreen: React.FC = () => {
     loadProfile();
   }, []);
 
-  // Open image picker to select a new image webb
   const pickImage = async () => {
     let result;
     if (Platform.OS === 'web') {
@@ -35,14 +34,14 @@ const ProfileScreen: React.FC = () => {
       });
     } else {
       result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'], // Fix: Use ['images'] instead of MediaTypeOptions
+        mediaTypes: ['images'], 
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
       });
     }
 
-    console.log(result); // Debugging output
+    console.log(result); 
 
     if (!result.canceled) {
       setNewProfilePic(result.assets[0].uri);
