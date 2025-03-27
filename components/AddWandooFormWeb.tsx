@@ -5,6 +5,7 @@ import debounce from 'lodash.debounce';
 import { fetchLocationCoordinates, uploadImageToS3, saveWandoo } from '../services/wandoo.service';
 import moment from 'moment-timezone';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import globalStyles from '../assets/styles/globalstyles';
 
 
 interface AddWandooFormProps {
@@ -152,12 +153,13 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
           {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.modalButton, styles.saveButton]} onPress={handleSave}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={[globalStyles.button, globalStyles.cancelButton]} onPress={onClose}>
+            <Text style={globalStyles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[globalStyles.button, globalStyles.saveButton]} onPress={handleSave}>
+            <Text style={globalStyles.buttonText}>Save</Text>
+          </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '50%',
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,

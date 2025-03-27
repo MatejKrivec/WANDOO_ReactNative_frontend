@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import {  fetchAddress, saveWandoo,  uploadImageToS3Android } from '../services/wandoo.service';
 import moment from 'moment';
+import globalStyles from '../assets/styles/globalstyles';
 
 interface AddWandooFormProps {
   visible: boolean;
@@ -162,17 +163,17 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
             {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}
 
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={onClose}>
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+            <TouchableOpacity style={[globalStyles.button, globalStyles.cancelButton]} onPress={onClose}>
+              <Text style={globalStyles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
               <TouchableOpacity
-              style={[styles.modalButton, styles.saveButton]}
+              style={[globalStyles.button, globalStyles.saveButton]}
               onPress={() => {
                 console.log("Save button pressed"); // Check if the event is being triggered
                 handleSave();
               }}
             >
-              <Text style={styles.buttonText}>Save</Text>
+              <Text style={globalStyles.buttonText}>Save</Text>
             </TouchableOpacity>
             </View>
           </View>

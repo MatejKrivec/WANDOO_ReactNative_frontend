@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { 
-  View, Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView 
+  View, Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView, 
+  TouchableOpacity
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { signUp } from '../services/auth.service';
 import { createProfile } from '../services/profile.service';
+import globalStyles from '../assets/styles/globalstyles';
 
 type SignupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Signup'>;
 
@@ -101,7 +103,13 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
           onChangeText={setConfirmPassword} 
           secureTextEntry 
         />
-        <Button title={loading ? 'Registering...' : 'Register'} onPress={handleSignup} disabled={loading} />
+        <TouchableOpacity 
+          style={[globalStyles.defaultButton, loading && globalStyles.disabledButton]} 
+          onPress={handleSignup} 
+          disabled={loading}
+        >
+          <Text style={globalStyles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -110,12 +118,14 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center'
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    width: 300
   },
   title: {
     fontSize: 24,

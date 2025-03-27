@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import globalStyles from '../assets/styles/globalstyles';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -14,12 +15,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Wandoo</Text>
       <View style={styles.buttonContainer}>
-        <View style={styles.button}>
-          <Button title="Login" onPress={() => navigation.navigate('Login')} />
-        </View>
-        <View style={styles.button}>
-          <Button title="Register" onPress={() => navigation.navigate('Signup')} />
-        </View>
+        <TouchableOpacity style={globalStyles.defaultButton} onPress={() => navigation.navigate('Login')}>
+          <Text style={globalStyles.buttonText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={globalStyles.defaultButton} onPress={() => navigation.navigate('Signup')}>
+          <Text style={globalStyles.buttonText}>Register</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -41,9 +42,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     height: 100,
-  },
-  button: {
-    marginVertical: 10,
   },
 });
 

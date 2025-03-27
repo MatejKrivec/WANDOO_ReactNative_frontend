@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import * as Location from 'expo-location'; 
 import { signIn } from '../services/auth.service';
+import globalStyles from '../assets/styles/globalstyles';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -83,7 +84,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         <TextInput style={styles.input} placeholder="First Name" value={name} onChangeText={setName} />
         <TextInput style={styles.input} placeholder="Last Name" value={surname} onChangeText={setSurname} />
         <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
-        <Button title="Login" onPress={handleLogin} disabled={!locationGranted} />
+        <TouchableOpacity 
+          style={[globalStyles.defaultButton, !locationGranted && globalStyles.disabledButton]} 
+          onPress={handleLogin} 
+          disabled={!locationGranted}
+        >
+          <Text style={globalStyles.buttonText}>Login</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -92,12 +99,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    width: Platform.OS === 'web' ? 300 : undefined
   },
   title: {
     fontSize: 24,

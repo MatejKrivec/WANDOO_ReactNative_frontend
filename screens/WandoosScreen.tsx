@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform } f
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { fetchFriendsWandoos, fetchJoinedWandoos, fetchAddress, joinWandoo } from '../services/wandoo.service';
+import globalStyles from '../assets/styles/globalstyles';
 
 type WandoosScreenRouteProp = RouteProp<RootStackParamList, 'Wandoos'>;
 
@@ -81,6 +82,13 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     }
   };
 
+  const formatDateTime = (eventDate: string) => {
+    const date = new Date(eventDate);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate}, time: ${formattedTime}`;
+  };
+
   useFocusEffect(
     useCallback(() => {
       console.log("The wandoo longitude and latitude: " + latitude + ", " + longitude);
@@ -93,15 +101,16 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     const isJoined = joinedWandoos.includes(item.id);
 
     return (
-      <View style={styles.wandooItem}>
+      <View style={globalStyles.wandooItem}>
         <View style={styles.profileContainer}>
           <Image source={{ uri: item.profilePicture || 'https://via.placeholder.com/40' }} style={styles.profileImage} />
           <Text style={styles.profileName}>{item.profileName || 'Unknown User'}</Text>
         </View>
-        <Text style={styles.title}>{item.title || 'Untitled Event'}</Text>
+        <Text style={globalStyles.title}>{item.title || 'Untitled Event'}</Text>
         <Image source={{ uri: item.picture }} style={styles.image} />
-        <Text style={styles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={globalStyles.date}>{formatDateTime(item.eventDate)}</Text>
+        <Text style={globalStyles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
+        <Text style={globalStyles.description}>{item.description}</Text>
         {isJoined ? (
           <View style={[styles.button, styles.disabledButton]}>
             <Text style={styles.buttonText}>Joined</Text>
@@ -135,7 +144,16 @@ const styles = StyleSheet.create({
   listWeb: {
     width: '65%',
   },
-  wandooItem: { width: '100%', borderWidth: 2, borderColor: 'black', borderRadius: 10, padding: 15, backgroundColor: 'white', marginBottom: 15, alignItems: 'center' },
+  wandooItem: { 
+    width: '100%', 
+    borderWidth: 2, 
+    borderColor: 'black', 
+    borderRadius: 10, 
+    padding: 15, 
+    backgroundColor: 'white', 
+    marginBottom: 15, 
+    alignItems: 'center' 
+  },
   profileContainer: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 10 },
   profileImage: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   profileName: { fontSize: 16, fontWeight: 'bold' },

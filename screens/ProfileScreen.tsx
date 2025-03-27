@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, Platform, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { fetchCurrentUserProfile, uploadProfilePicture, updateProfilePicture, uploadProfilePictureForAndroid } from '../services/profile.service';
+import globalStyles from '../assets/styles/globalstyles';
 
 const ProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -100,13 +101,13 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.detail}>Email: {profile?.email || 'N/A'}</Text>
       </View>
 
-      <TouchableOpacity style={styles.changePicButton} onPress={pickImage}>
-        <Text style={styles.changePicText}>Change Profile Picture</Text>
+      <TouchableOpacity style={globalStyles.defaultButton} onPress={pickImage}>
+        <Text style={globalStyles.buttonText}>Change Profile Picture</Text>
       </TouchableOpacity>
 
       {newProfilePic && (
         <TouchableOpacity style={styles.saveButton} onPress={handleImageUpload}>
-          <Text style={styles.saveButtonText}>Save New Profile Picture</Text>
+          <Text style={globalStyles.buttonText}>Save New Profile Picture</Text>
         </TouchableOpacity>
       )}
     </View>

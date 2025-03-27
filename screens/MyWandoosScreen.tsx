@@ -5,6 +5,7 @@ import {
 import AddWandooFormAndroid from '../components/AddWandooFormAndroid';
 import AddWandooFormWeb from '../components/AddWandooFormWeb';
 import { fetchMyWandoos, fetchAddress } from '../services/wandoo.service';
+import globalStyles from '../assets/styles/globalstyles';
 
 interface Wandoo {
   id: number;
@@ -54,12 +55,12 @@ const MyWandoosScreen: React.FC = () => {
   };
 
   const renderWandooItem = ({ item }: { item: Wandoo }) => (
-    <View style={styles.wandooItem}>
-      <Text style={styles.title}>{item.title}</Text>
+    <View style={globalStyles.wandooItem}>
+      <Text style={globalStyles.title}>{item.title || 'Untitled Event'}</Text>
       <Image source={{ uri: item.picture }} style={styles.image} />
-      <Text style={styles.date}>{formatDateTime(item.eventDate)}</Text>
-      <Text style={styles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
-      <Text style={styles.description}>{item.description}</Text>
+      <Text style={globalStyles.date}>{formatDateTime(item.eventDate)}</Text>
+      <Text style={globalStyles.location}>Location: {addresses[item.id] || 'Loading...'}</Text>
+      <Text style={globalStyles.description}>{item.description}</Text>
     </View>
   );
 
@@ -169,8 +170,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   plusSign: {
-    fontSize: 40,
+    fontSize: 50,
     color: 'white',
+    marginBottom: 10
   },
   noWandoosContainer: {
     justifyContent: 'center',
