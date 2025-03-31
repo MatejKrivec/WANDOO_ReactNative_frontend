@@ -36,7 +36,6 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
   };
 
   useEffect(() => {
-    console.log(route.params);
     loadMessages();
   }, [id]);
 

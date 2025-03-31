@@ -41,7 +41,6 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       const signUpResponse = await signUp(name, surname, age, email, password);
   
       const userId = signUpResponse.UserSub; 
-      console.log('User ID from Cognito:', userId);
   
       await createProfile(userId, name, email, parseInt(age, 10));
   

@@ -13,9 +13,9 @@ type Props = {
 };
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [name, setName] = useState('Matej');
-  const [surname, setSurname] = useState('Krivec');
-  const [password, setPassword] = useState('Matej123!');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [password, setPassword] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locationGranted, setLocationGranted] = useState(false);
@@ -61,7 +61,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const data = await signIn(username, password);
-      console.log('Login successful:', data);
+      console.log('Login successful');
 
       setTimeout(() => {
         navigation.replace('Landing', { latitude, longitude });

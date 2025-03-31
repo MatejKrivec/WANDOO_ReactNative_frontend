@@ -34,7 +34,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
         quality: 1,
       });
     
-      console.log(result); 
     
       if (!result.canceled) {
         setImage(result.assets[0].uri);
@@ -66,7 +65,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
       
     }
 
-    console.log("Date and time: " + date)
 
     const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
           const eventDate = localTime.toISOString();
@@ -79,8 +77,6 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
       longitude: location.longitude,
       picture: imageUrl,
     };
-    console.log("New wandoo!")
-    console.log(newWandoo)
 
     await saveWandoo(newWandoo);
     Alert.alert('Success', 'Wandoo created successfully!');
@@ -144,7 +140,9 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
 
             <TextInput style={styles.inputDescription} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-        {/*{Platform.OS !== 'web' && (
+        {/**/}    
+
+        {Platform.OS !== 'web' && (
               <MapView
                 style={styles.map}
                 region={{
@@ -157,7 +155,7 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
               >
                 <Marker coordinate={location} title={location.address} />
               </MapView>
-            )} */}    
+            )} 
         
 
             {location.address ? <Text style={styles.selectedLocation}>Selected: {location.address}</Text> : null}

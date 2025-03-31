@@ -20,7 +20,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.matejkrivec.Wandoo"
+      "package": "com.matejkrivec.Wandoo",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB-rQCIb2SGbdoYBeFCwbDaBOGufk9ZgmQ"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

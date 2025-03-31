@@ -42,7 +42,6 @@ const ProfileScreen: React.FC = () => {
       });
     }
 
-    console.log(result); 
 
     if (!result.canceled) {
       setNewProfilePic(result.assets[0].uri);
@@ -65,7 +64,6 @@ const ProfileScreen: React.FC = () => {
   const handleImageUpload = async () => {
     if (!newProfilePic) return;
 
-    console.log("New profile pic: " + newProfilePic)
   
     try {
       let uploadedImageUrl;
