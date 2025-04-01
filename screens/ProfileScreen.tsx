@@ -68,7 +68,7 @@ const ProfileScreen: React.FC = () => {
     try {
       let uploadedImageUrl;
       
-      if (Platform.OS === 'android' || 'ios') {
+      if (Platform.OS === 'android' || Platform.OS === 'ios') {
         uploadedImageUrl = await uploadProfilePictureForAndroid(newProfilePic, profile?.picture);
       } else {
         uploadedImageUrl = await uploadProfilePicture(newProfilePic, profile?.picture);
