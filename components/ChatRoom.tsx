@@ -65,9 +65,9 @@ const ChatRoom: React.FC<Props> = ({ route }) => {
         <Text style={[styles.messageText, item.type === 'my' ? styles.senderText : styles.receiverText]}>
           {item.content}
         </Text>
-        <Text style={[styles.messageTimestamp, item.type === 'my' ? styles.senderTimestamp : styles.receiverTimestamp]}>
+       {/*<Text style={[styles.messageTimestamp, item.type === 'my' ? styles.senderTimestamp : styles.receiverTimestamp]}>
           {item.timestamp}
-        </Text>
+        </Text> */} 
       </View>
     </View>
   );
