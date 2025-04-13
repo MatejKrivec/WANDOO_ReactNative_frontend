@@ -140,7 +140,8 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
 
             <TextInput style={styles.inputDescription} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-        {/* {Platform.OS !== 'web' && (
+        {/* */}    
+        {Platform.OS !== 'web' && (
               <MapView
                 style={styles.map}
                 region={{
@@ -153,8 +154,7 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
               >
                 <Marker coordinate={location} title={location.address} />
               </MapView>
-            )}*/}    
-
+            )}
         
         
 
