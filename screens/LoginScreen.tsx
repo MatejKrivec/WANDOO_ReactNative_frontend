@@ -47,29 +47,35 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   const handleLogin = async () => {
-  console.time('Form submission time'); // Začetek merjenja časa
+  const clickStart = performance.now(); // ⏱ ZAČETEK: klik na gumb
+
+  console.time('Form submission time'); // Začetek merjenja prijave
 
   if (!name || !surname || !password) {
     Alert.alert('Error', 'All fields are required!');
-    console.timeEnd('Form submission time'); // Končaj merjenje, če je napaka
+    console.timeEnd('Form submission time');
     return;
   }
 
   if (!locationGranted) {
     Alert.alert('Error', 'Location permission is required to proceed!');
-    console.timeEnd('Form submission time'); // Končaj merjenje, če ni dovoljenja
+    console.timeEnd('Form submission time');
     return;
   }
 
   const username = `${name.trim()}_${surname.trim()}`;
 
   try {
-    const data = await signIn(username, password);
+    const beforeSubmit = performance.now(); // 🕐 čas začetka dejanske oddaje
+    console.log(`⏱ Time from click to submission start: ${(beforeSubmit - clickStart).toFixed(2)} ms`);
+
+    const data = await signIn(username, password); // simulacija klica
+
     console.log('Login successful');
   } catch (error: any) {
     Alert.alert('Error', error.message || 'Something went wrong');
   } finally {
-    console.timeEnd('Form submission time'); // Končaj merjenje po zaključku prijave
+    console.timeEnd('Form submission time');
   }
 
   setTimeout(() => {

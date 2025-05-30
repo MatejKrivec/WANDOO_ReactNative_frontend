@@ -80,6 +80,7 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
   };
 
   const handleSave = async () => {
+       const clickStart = performance.now(); 
     console.time('Add Wandoo Form submission time');
 
     if (!title || !date || !time || !location.address) {
@@ -88,6 +89,8 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
     }
 
     try {
+       const beforeSubmit = performance.now(); // 🕐 čas začetka dejanske oddaje
+    console.log(`⏱ Time from click to submission start: ${(beforeSubmit - clickStart).toFixed(2)} ms`);
       const token = await getToken();
 
       const localTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Europe/Ljubljana');
