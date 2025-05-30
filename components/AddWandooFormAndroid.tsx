@@ -52,6 +52,7 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
   };
 
   const handleSave = async  () => {
+    console.time('Add Wandoo Form submission time');
     if (!title || !description || !location.address) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -87,7 +88,9 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
 
     const errorMessage = error?.message || 'Failed to create Wandoo';
     Alert.alert('Error', errorMessage);
-    }
+    }finally {
+    console.timeEnd('Add Wandoo Form submission time'); // Končaj merjenje po zaključku prijave
+  }
   };
 
   return (
@@ -140,7 +143,8 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
 
             <TextInput style={styles.inputDescription} placeholder="Description" value={description} onChangeText={setDescription} multiline />
 
-        {/* {Platform.OS !== 'web' && (
+        {/* UPORABA MAPVIEW POVZROCI NAPAKO 
+         {Platform.OS !== 'web' && (
               <MapView
                 style={styles.map}
                 region={{
@@ -154,7 +158,7 @@ const AddWandooFormAndroid: React.FC<AddWandooFormProps> = ({ visible, onClose }
                 <Marker coordinate={location} title={location.address} />
               </MapView>
             )}*/}    
-
+      
         
         
 

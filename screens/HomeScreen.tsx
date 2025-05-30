@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import globalStyles from '../assets/styles/globalstyles';
+
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -11,6 +12,12 @@ type Props = {
 };
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  console.time('HomeScreen render time'); // začetek merjenja
+
+  useEffect(() => {
+    console.timeEnd('HomeScreen render time'); // konec merjenja
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Wandoo</Text>

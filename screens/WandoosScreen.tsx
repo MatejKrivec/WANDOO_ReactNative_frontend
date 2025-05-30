@@ -18,20 +18,25 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
   const [joinedWandoos, setJoinedWandoos] = useState<number[]>([]);
 
   const fetchWandoosData = async () => {
-    try {
-      const wandoosData = await fetchFriendsWandoos();
-      setWandoos(wandoosData);
+  console.time('WandoosScreen load time');  // Začetek merjenja
 
-      wandoosData.forEach(async (wandoo: any) => {
-        const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
-        setAddresses((prev) => ({ ...prev, [wandoo.id]: address }));
-      });
+  try {
+    const wandoosData = await fetchFriendsWandoos();
+    setWandoos(wandoosData);
 
-      sortWandoosByDistance(wandoosData);
-    } catch (error) {
-      console.error('Error fetching Wandoos:', error);
-    }
-  };
+    wandoosData.forEach(async (wandoo: any) => {
+      const address = await fetchAddress(wandoo.latitude, wandoo.longitude);
+      setAddresses((prev) => ({ ...prev, [wandoo.id]: address }));
+    });
+
+    sortWandoosByDistance(wandoosData);
+
+  } catch (error) {
+    console.error('Error fetching Wandoos:', error);
+  } finally {
+    console.timeEnd('WandoosScreen load time');  // Konec merjenja
+  }
+};
 
   const fetchJoinedData = async () => {
     try {
@@ -42,7 +47,7 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     }
   };
 
-  // Sort Wandoos by distance from user
+  // SORTIRANJE WANDOJEV PO ODDALJENOSTI OD TRENUTNE LOKACIJE UPORABNIKA
   const sortWandoosByDistance = (wandoosList: any[]) => {
     if (latitude === null || longitude === null) {
       console.error('User location is not available.');
@@ -58,7 +63,7 @@ const WandoosScreen: React.FC<Props> = ({ route }) => {
     setWandoos(sortedWandoos);
   };
 
-  // Calculate distance between two points (in km)
+  // RAČUN ZA PRIDOBITEV RAZDALJE MED UPORABNIKOVO LOKACIJO IN LOKACIJO WANDOO-JA
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRad = (value: number) => (value * Math.PI) / 180;
     const R = 6371; // Earth radius in km

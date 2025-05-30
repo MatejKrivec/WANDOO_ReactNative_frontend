@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TextInput, Button, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, TextInput, StyleSheet, Alert, Platform, KeyboardAvoidingView, ScrollView, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import * as Location from 'expo-location'; 
+import * as Location from 'expo-location'; //UVOZ LOCATION MODULA
 import { signIn } from '../services/auth.service';
 import globalStyles from '../assets/styles/globalstyles';
 
@@ -29,7 +29,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({});  //PRIDOBIVANJE LOKACIJE
       setLatitude(location.coords.latitude);
       setLongitude(location.coords.longitude);
 
@@ -47,35 +47,40 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   const handleLogin = async () => {
-    if (!name || !surname || !password) {
-      Alert.alert('Error', 'All fields are required!');
-      return;
-    }
+  console.time('Form submission time'); // Začetek merjenja časa
 
-    if (!locationGranted) {
-      Alert.alert('Error', 'Location permission is required to proceed!');
-      return;
-    }
+  if (!name || !surname || !password) {
+    Alert.alert('Error', 'All fields are required!');
+    console.timeEnd('Form submission time'); // Končaj merjenje, če je napaka
+    return;
+  }
 
-    const username = `${name.trim()}_${surname.trim()}`;
+  if (!locationGranted) {
+    Alert.alert('Error', 'Location permission is required to proceed!');
+    console.timeEnd('Form submission time'); // Končaj merjenje, če ni dovoljenja
+    return;
+  }
 
-    try {
-      const data = await signIn(username, password);
-      console.log('Login successful');
+  const username = `${name.trim()}_${surname.trim()}`;
 
-      setTimeout(() => {
-        navigation.replace('Landing', { latitude, longitude });
-      }, 500);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong');
-    }
-  };
+  try {
+    const data = await signIn(username, password);
+    console.log('Login successful');
+  } catch (error: any) {
+    Alert.alert('Error', error.message || 'Something went wrong');
+  } finally {
+    console.timeEnd('Form submission time'); // Končaj merjenje po zaključku prijave
+  }
+
+  setTimeout(() => {
+    navigation.replace('Landing', { latitude, longitude });
+  }, 500);
+};
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined} > {/* PRIMER UPORABE PLATFORM MODULA */}                 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Login</Text>
         <Text style={styles.locationMessage}>

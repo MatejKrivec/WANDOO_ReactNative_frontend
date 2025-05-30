@@ -80,6 +80,8 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
   };
 
   const handleSave = async () => {
+    console.time('Add Wandoo Form submission time');
+
     if (!title || !date || !time || !location.address) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -111,7 +113,9 @@ const AddWandooFormWeb: React.FC<AddWandooFormProps> = ({ visible, onClose }) =>
       onClose();
     } catch (error: any) {
       Alert.alert('Error', error.message);
-    }
+    } finally {
+    console.timeEnd('Add Wandoo Form submission time'); // Končaj merjenje po zaključku prijave
+  }
   };
 
   return (
